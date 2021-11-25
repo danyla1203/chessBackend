@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
-import { Game } from "./Game";
+import { Game, Player } from "./Game/Game";
 
 export class WsServer {
   ws: ws.server;
@@ -16,22 +16,24 @@ export class WsServer {
   }
 
   public run() {
-    this.ws.on('request', (request: ws.request) => {
-      const connection = request.accept('echo-protocol', request.origin);
-      const PATH = request.resourceURL.path.split("/")[1];
-      const IP = this.makeIp();
+    this.ws.on('request', (req: ws.request) => {
+      const newConn: ws.connection = req.accept('echo-protocol', req.origin);
+      const PATH: string = req.resourceURL.path.split("/")[1];
       
       if (Game.isNewGame(PATH, this.games)) {
-        this.games.push(new Game(PATH, IP));
+        this.games.push(new Game(PATH, newConn));
       } else {
-        const game = Game.findGame(PATH, IP, this.games);
+        const game: Game = Game.findGame(PATH, newConn, this.games);
         if (game) {
-          game.addPlayer(IP);
+          game.addPlayer(newConn);
           game.start();
-          connection.on('message', (message: ws.Message) => {
+          newConn.on('message', (message: ws.Message) => {
             if (message.type == 'utf8') {
               let data = JSON.parse(message.utf8Data);
               game.makeTurn(data);
+              game.couple.map((player: Player) => {
+                
+              })
             }
           });
         }
