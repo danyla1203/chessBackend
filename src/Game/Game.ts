@@ -1,11 +1,13 @@
 import * as ws from "websocket";
 import { Cell, Figure, FiguresState, GameProccess } from './GameProccess';
 
-type TurnData = {
+export type TurnData = {
+  playerId: string
   figure: Figure;
   cell: Cell;
 }
 export type Player = {
+  id: string
   conn: ws.connection;
   side: 'w' | 'b';
 }
@@ -15,6 +17,7 @@ export class Game {
   couple: Player[];
   path: string;
   process: GameProccess;
+  isActive: boolean
 
   static isNewGame(path: string, games: Game[]) {
     for (let i = 0; i < games.length; i++) {
@@ -22,29 +25,34 @@ export class Game {
     }
     return true;
   }
-  static findGame(path: string, user: ws.connection, games: Game[]) {
+  static findGame(path: string, playerId: string, games: Game[]) {
     return games.find((game) => {
       return game.path == path &&
-             game.couple[0].conn !== user &&
+             game.couple[0].id !== playerId &&
              game.couple.length < 2;
     });
   }
 
-  constructor(path: string, initiatorConn: ws.connection) {
-    this.couple = [{ conn: initiatorConn, side: 'w' }];
+  constructor(path: string, initiatorConn: ws.connection, id: string) {
+    this.couple = [{ conn: initiatorConn, side: 'w', id: id }];
     this.path = path;
     this.process = new GameProccess();
+    this.isActive = false;
   }
   
-  public addPlayer(conn: ws.connection) {
-    this.couple.push({ side: 'b', conn: conn});
+  public addPlayer(conn: ws.connection, id: string) {
+    this.couple.push({ side: 'b', conn: conn, id: id});
   }
   public start() {
-    console.log("Game Start!", this);
+    this.isActive = true;
+    console.log("Game Start!");
   }
 
   public makeTurn(turn: TurnData) {
-    this.process.makeTurn(turn.figure, turn.cell);
+    const sideToTurn = this.couple.find((player) => {
+      return player.id == turn.playerId;
+    }).side;
+    this.process.makeTurn(sideToTurn, turn.figure, turn.cell);
   } 
   public returnActualState(): FiguresState {
     return this.process.state();

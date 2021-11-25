@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
-import { Game, Player } from "./Game/Game";
+import { Game, Player, TurnData } from "./Game/Game";
 
 export class WsServer {
   ws: ws.server;
@@ -11,34 +11,45 @@ export class WsServer {
   }
 
   //Use in dev mode to mock ip address
-  private makeIp(): string {
+  private makeId(): string {
     return randomBytes(10).toString('hex');
+  }
+
+  private connectToGame(path: string, newConn: ws.connection, playerId: string): Game | undefined {
+    if (Game.isNewGame(path, this.games)) {
+      const game = new Game(path, newConn, playerId);
+      this.games.push(game);
+      return game;
+    } else {
+      const game = Game.findGame(path, playerId, this.games);
+      if (game) {
+        game.addPlayer(newConn, playerId);
+        game.start();
+      }
+      return game;
+    }
   }
 
   public run() {
     this.ws.on('request', (req: ws.request) => {
       const newConn: ws.connection = req.accept('echo-protocol', req.origin);
       const PATH: string = req.resourceURL.path.split("/")[1];
-      
-      if (Game.isNewGame(PATH, this.games)) {
-        this.games.push(new Game(PATH, newConn));
-      } else {
-        const game: Game = Game.findGame(PATH, newConn, this.games);
-        if (game) {
-          game.addPlayer(newConn);
-          game.start();
-          newConn.on('message', (message: ws.Message) => {
-            if (message.type == 'utf8') {
-              let data = JSON.parse(message.utf8Data);
-              game.makeTurn(data);
-              game.couple.map((player: Player) => {
-                const state = game.returnActualState();
-                player.conn.sendUTF(JSON.stringify(state));
-              })
-            }
-          });
-        }
-      }
+      const PlayerId = this.makeId();
+
+      const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
+      if (game) {
+        newConn.on('message', (message: ws.Message) => {
+          if (message.type == 'utf8' && game.isActive) {
+            let data: TurnData = JSON.parse(message.utf8Data);
+            data.playerId = PlayerId;
+            game.makeTurn(data);
+            game.couple.map((player: Player) => {
+              const state = game.returnActualState();
+              player.conn.sendUTF(JSON.stringify(state));
+            })
+          }
+        });
+      } 
     });
   }
 }
