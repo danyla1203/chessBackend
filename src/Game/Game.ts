@@ -1,5 +1,5 @@
 import * as ws from "websocket";
-import { Cell, Figure, GameProccess } from './GameProccess';
+import { Cell, Figure, FiguresState, GameProccess } from './GameProccess';
 
 type TurnData = {
   figure: Figure;
@@ -36,17 +36,17 @@ export class Game {
     this.process = new GameProccess();
   }
   
-  public addPlayer(ip: any) {
-    this.couple.push(ip);
+  public addPlayer(conn: ws.connection) {
+    this.couple.push({ side: 'b', conn: conn});
   }
   public start() {
     console.log("Game Start!", this);
   }
 
   public makeTurn(turn: TurnData) {
-
+    this.process.makeTurn(turn.figure, turn.cell);
   } 
-  public returnActualState(): any {
-    
+  public returnActualState(): FiguresState {
+    return this.process.state();
   }
 }

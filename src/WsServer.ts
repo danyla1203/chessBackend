@@ -32,7 +32,8 @@ export class WsServer {
               let data = JSON.parse(message.utf8Data);
               game.makeTurn(data);
               game.couple.map((player: Player) => {
-                
+                const state = game.returnActualState();
+                player.conn.sendUTF(JSON.stringify(state));
               })
             }
           });
