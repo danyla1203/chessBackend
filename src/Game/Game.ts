@@ -54,7 +54,7 @@ export class Game {
     }).side;
     this.process.makeTurn(sideToTurn, turn.figure, turn.cell);
   } 
-  public returnActualState(): FiguresState {
+  public actualState(): FiguresState {
     return this.process.state();
   }
 }

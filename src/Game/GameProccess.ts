@@ -1,16 +1,16 @@
 export type Cell = string;
 export type Figure = string;
 export type FiguresState = {
-  blackFigures: {[index: Figure]: Cell};
-  whiteFigures: {[index: Figure]: Cell};
+  black: {[index: Figure]: Cell};
+  white: {[index: Figure]: Cell};
 }
 export class GameProccess {
-  blackFigures: {[index: Figure]: Cell};
-  whiteFigures: {[index: Figure]: Cell};
+  black: {[index: Figure]: Cell};
+  white: {[index: Figure]: Cell};
   sideToTurn: 'w'|'b';
 
   private initBoard() {
-    this.blackFigures = {
+    this.black = {
       'pawn1': 'a7',
       'pawn2': 'b7',
       'pawn3': 'c7',
@@ -28,7 +28,7 @@ export class GameProccess {
       'B2': 'g8',
       'R2': 'h8'
     };
-    this.whiteFigures = {
+    this.white = {
       'pawn1': 'a2',
       'pawn2': 'b2',
       'pawn3': 'c2',
@@ -53,13 +53,13 @@ export class GameProccess {
     this.sideToTurn = 'w';
   }
 
-  public makeTurn(figure: Figure, cell: Cell): void {
-    
+  public makeTurn(side: string, figure: Figure, cell: Cell): void {
+    if (this.sideToTurn != side) return;
   }
   public state(): FiguresState {
     return {
-      blackFigures: this.blackFigures,
-      whiteFigures: this.whiteFigures,
+      black: this.black,
+      white: this.white,
     }
   }
 }
