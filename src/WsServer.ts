@@ -50,7 +50,11 @@ export class WsServer {
 
       const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
       if (game) {
-        this.sendMessage(newConn, 'INIT_GAME', {board: game.actualState()});
+        if (game.couple.length == 1) {
+          this.sendMessage(newConn, 'INIT_GAME', {board: game.actualState(), side: 'w'});
+        } else if (game.couple.length == 2) {
+          this.sendMessage(newConn, 'INIT_GAME', {board: game.actualState(), side: 'b'});
+        }
         newConn.on('message', (message: ws.Message) => {
           if (message.type == 'utf8' && game.isActive) {
             let data: TurnData = JSON.parse(message.utf8Data);
