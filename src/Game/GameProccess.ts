@@ -8,6 +8,7 @@ export class GameProccess {
   black: {[index: Figure]: Cell};
   white: {[index: Figure]: Cell};
   sideToTurn: 'w'|'b';
+  playingSide: 'w'|'b'
 
   private initBoard() {
     this.black = {
@@ -51,6 +52,7 @@ export class GameProccess {
   constructor() {
     this.initBoard();
     this.sideToTurn = 'w';
+    this.playingSide = 'w';
   }
 
   public makeTurn(side: string, figure: Figure, cell: Cell): void {
