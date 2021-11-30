@@ -9,7 +9,6 @@ export class GameProccess {
   black: {[index: Figure]: Cell};
   white: {[index: Figure]: Cell};
   sideToTurn: 'w'|'b';
-  playingSide: 'w'|'b'
 
   private initBoard() {
     this.black = {
@@ -53,7 +52,6 @@ export class GameProccess {
   constructor() {
     this.initBoard();
     this.sideToTurn = 'w';
-    this.playingSide = 'w';
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   }
   private findNextLetter(letter: string): string[] {
@@ -73,7 +71,6 @@ export class GameProccess {
   private checkIsCellEmpty(cell: string): boolean {
     if (parseInt(cell[1], 10) > 8) return false;
     for (let figure in this.white) {
-      console.log(this.white[figure], figure, cell);
       if (this.white[figure] === cell) return false;
     }
     for (let figure in this.black) {
@@ -82,7 +79,7 @@ export class GameProccess {
     return true;
   }
   private isEnemyInCell(cell: Cell): boolean {
-    if (this.playingSide == 'w') {
+    if (this.sideToTurn == 'w') {
       for (let figure in this.black) {
         if (this.black[figure] === cell) return true;
       }
@@ -94,33 +91,38 @@ export class GameProccess {
   }
 
   private updateBoard(figure: Figure, cell: Cell): void {
-    this.playingSide == 'w' ?
+    this.sideToTurn == 'w' ?
       this.white[figure] = cell:
       this.black[figure] = cell;
   }
 
   private pawnMove(figure: Figure, cell: Cell): void {
-    let prevFigure, sideToMove;
-    let [ letter, num ] = cell;
-    if (this.playingSide == 'w') {
-      prevFigure = this.white[figure];
+    let prevFigureCell, sideToMove;
+    if (this.sideToTurn == 'w') {
+      prevFigureCell = this.white[figure];
       sideToMove = 1;
     } else {
-      prevFigure = this.black[figure];
+      prevFigureCell = this.black[figure];
       sideToMove = -1;
     }
-
+    let [ letter, num ] = cell;
+    let [ prevLetter, prevNum ] = prevFigureCell;
     let nextLetters = this.findNextLetter(letter);
-    let nextNum = num + sideToMove;
+    let possibleNextNum  = parseInt(prevNum) + sideToMove;
     let possibleMoves = [];
-    if (this.checkIsCellEmpty(`${letter}${nextNum}`)) {
-      possibleMoves.push(`${letter}${nextNum}`);
+
+    let possibleNextCell = `${prevLetter}${possibleNextNum}`;
+    let possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
+    let possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
+
+    if (possibleNextCell == cell && this.checkIsCellEmpty(cell)) {
+      possibleMoves.push(cell);
     }
-    if (this.isEnemyInCell(`${nextLetters[0]}${nextNum}`)) {
-      possibleMoves.push(`${nextLetters[0]}${nextNum}`);
+    if (possibleNextDiagonalCell1 == cell && this.checkIsCellEmpty(cell)) {
+      possibleMoves.push(cell);
     }
-    if (this.isEnemyInCell(`${nextLetters[1]}${nextNum}`)) {
-      possibleMoves.push(`${nextLetters[1]}${nextNum}`);
+    if (possibleNextDiagonalCell2 == cell && this.isEnemyInCell(cell)) {
+      possibleMoves.push(cell);
     }
     possibleMoves.map((move: Cell) => {
       move == cell ? this.updateBoard(figure, cell) : null;
@@ -132,8 +134,10 @@ export class GameProccess {
   private queenMove(cell: Cell) {}
 
   public makeTurn(side: string, figure?: Figure, cell?: Cell): void {
+    console.log(figure, cell);
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
+    figure = figure.replace(/-[w,b]/, '');
     if (!this.white[figure] && !this.black[figure]) return;
 
     if (/pawn/.test(figure)) this.pawnMove(figure, cell);
@@ -141,6 +145,9 @@ export class GameProccess {
     if (/K/.test(figure)) this.knightMove(cell);
     if (/B/.test(figure)) this.bishopMove(cell);
     if (/Q/.test(figure)) this.queenMove(cell);
+    this.sideToTurn == 'w'  ?
+      this.sideToTurn = 'b' : 
+      this.sideToTurn = 'w';
   }
 
   public state(): FiguresState {
