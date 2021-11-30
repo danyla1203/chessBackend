@@ -96,6 +96,23 @@ export class GameProccess {
       this.black[figure] = cell;
   }
 
+  private strike(cell: Cell): void {
+    if (this.sideToTurn == 'w') {
+      for (let figure in this.black) {
+        if (this.black[figure] == cell) {
+          delete this.black[figure];
+        }
+      }
+    } else {
+      for (let figure in this.white) {
+        if (this.white[figure] == cell) {
+          console.log('strike');
+          delete this.white[figure];
+        }
+      }
+    }
+  }
+
   private pawnMove(figure: Figure, cell: Cell): void {
     let prevFigureCell, sideToMove;
     if (this.sideToTurn == 'w') {
@@ -105,27 +122,30 @@ export class GameProccess {
       prevFigureCell = this.black[figure];
       sideToMove = -1;
     }
-    let [ letter, num ] = cell;
+  
     let [ prevLetter, prevNum ] = prevFigureCell;
-    let nextLetters = this.findNextLetter(letter);
+    let nextLetters = this.findNextLetter(prevLetter);
     let possibleNextNum  = parseInt(prevNum) + sideToMove;
     let possibleMoves = [];
 
     let possibleNextCell = `${prevLetter}${possibleNextNum}`;
     let possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
     let possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
-
     if (possibleNextCell == cell && this.checkIsCellEmpty(cell)) {
       possibleMoves.push(cell);
     }
-    if (possibleNextDiagonalCell1 == cell && this.checkIsCellEmpty(cell)) {
+    if (possibleNextDiagonalCell1 == cell && this.isEnemyInCell(cell)) {
       possibleMoves.push(cell);
     }
     if (possibleNextDiagonalCell2 == cell && this.isEnemyInCell(cell)) {
       possibleMoves.push(cell);
     }
+    console.log(possibleMoves);
     possibleMoves.map((move: Cell) => {
-      move == cell ? this.updateBoard(figure, cell) : null;
+      if (move == cell) {
+        this.strike(cell);
+        this.updateBoard(figure, cell);
+      }
     });
   }
   private rockMove(cell: Cell) {}
@@ -134,7 +154,6 @@ export class GameProccess {
   private queenMove(cell: Cell) {}
 
   public makeTurn(side: string, figure?: Figure, cell?: Cell): void {
-    console.log(figure, cell);
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
     figure = figure.replace(/-[w,b]/, '');
