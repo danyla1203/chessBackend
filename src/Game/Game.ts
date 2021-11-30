@@ -1,4 +1,4 @@
-import * as ws from "websocket";
+import * as ws from 'websocket';
 import { Cell, Figure, FiguresState, GameProccess } from './GameProccess';
 
 export type TurnData = {
@@ -45,7 +45,7 @@ export class Game {
   }
   public start() {
     this.isActive = true;
-    console.log("Game Start!");
+    console.log('Game Start!');
   }
 
   public makeTurn(turn: TurnData) {

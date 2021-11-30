@@ -5,7 +5,7 @@ import { WsServer } from './WsServer';
 const server = http.createServer(function(req, res) {
   console.log((new Date()) + ' Received request for ' + req.url);
   res.writeHead(200);
-  res.end("Http Server");
+  res.end('Http Server');
 });
 server.listen(8081, function() {
   console.log((new Date()) + ' Server is listening on port 8080');

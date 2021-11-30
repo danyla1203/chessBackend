@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
-import { Game, Player, TurnData } from "./Game/Game";
+import { Game, Player, TurnData } from './Game/Game';
 
 type Response = {
   type: string;
@@ -45,7 +45,7 @@ export class WsServer {
   public run() {
     this.ws.on('request', (req: ws.request) => {
       const newConn: ws.connection = req.accept('echo-protocol', req.origin);
-      const PATH: string = req.resourceURL.path.split("/")[1];
+      const PATH: string = req.resourceURL.path.split('/')[1];
       const PlayerId = this.makeId();
 
       const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
