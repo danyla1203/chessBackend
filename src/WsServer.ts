@@ -57,7 +57,7 @@ export class WsServer {
         }
         newConn.on('message', (message: ws.Message) => {
           if (message.type == 'utf8' && game.isActive) {
-            let data: TurnData = JSON.parse(message.utf8Data);
+            let data: TurnData = JSON.parse(message.utf8Data).payload;
             data.playerId = PlayerId;
             game.makeTurn(data);
             game.couple.map((player: Player) => {
