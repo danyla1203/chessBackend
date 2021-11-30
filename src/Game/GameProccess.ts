@@ -113,7 +113,7 @@ export class GameProccess {
     }
   }
 
-  private pawnMove(figure: Figure, cell: Cell): void {
+  private pawnMove(figure: Figure, newCell: Cell): void {
     let prevFigureCell, sideToMove;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -131,26 +131,66 @@ export class GameProccess {
     let possibleNextCell = `${prevLetter}${possibleNextNum}`;
     let possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
     let possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
-    if (possibleNextCell == cell && this.checkIsCellEmpty(cell)) {
-      possibleMoves.push(cell);
+    if (possibleNextCell == newCell && this.checkIsCellEmpty(newCell)) {
+      possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell1 == cell && this.isEnemyInCell(cell)) {
-      possibleMoves.push(cell);
+    if (possibleNextDiagonalCell1 == newCell && this.isEnemyInCell(newCell)) {
+      possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell2 == cell && this.isEnemyInCell(cell)) {
-      possibleMoves.push(cell);
+    if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(newCell)) {
+      possibleMoves.push(newCell);
     }
     possibleMoves.map((move: Cell) => {
-      if (move == cell) {
-        this.strike(cell);
-        this.updateBoard(figure, cell);
+      if (move == newCell) {
+        this.strike(newCell);
+        this.updateBoard(figure, newCell);
       }
     });
   }
-  private rockMove(cell: Cell) {
+  private rockMove(figure: Figure, newCell: Cell): void {
+    let prevFigureCell;
+    this.sideToTurn == 'w' ?
+      prevFigureCell = this.white[figure]:
+      prevFigureCell = this.black[figure];
+    let [ prevLetter, num ] = prevFigureCell;
+    let prevNum = parseInt(num, 10);
 
+    for (let i = prevNum + 1; i < 9; i++) {
+      let cell = `${prevLetter}${i}`;
+      if (!this.checkIsCellEmpty(cell)) break;
+      else if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      } 
+    }
+    for (let i = prevNum - 1; i > 0; i--) {
+      let cell = `${prevLetter}${i}`;
+      if (!this.checkIsCellEmpty(cell)) break;
+      else if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      } 
+    }
+
+    let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+    for (let i = letterIndex + 1; i < this.Letters.length; i++) {
+      let cell = `${this.Letters[i]}${prevNum}`;
+      if (!this.checkIsCellEmpty(cell)) break;
+      else if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      } 
+    }
+    for (let i = letterIndex - 1; i >= 0; i--) {
+      let cell = `${this.Letters[i]}${prevNum}`;
+      if (!this.checkIsCellEmpty(cell)) break;
+      else if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      } 
+    }
   }
-  private knightMove(figure: Figure, cell: Cell) {
+  private knightMove(figure: Figure, cell: Cell): void {
     console.log(figure, cell);
     let prevFigureCell;
     if (this.sideToTurn == 'w') {
@@ -182,8 +222,53 @@ export class GameProccess {
       }
     })
   }
-  private bishopMove(cell: Cell) {}
-  private queenMove(cell: Cell) {}
+  private bishopMove(figure: Figure, newCell: Cell) {
+    let prevFigureCell;
+    this.sideToTurn == 'w' ?
+      prevFigureCell = this.white[figure]:
+      prevFigureCell = this.black[figure];
+    let [ prevLetter, num ] = prevFigureCell;
+    let prevNum = parseInt(num, 10);
+
+    let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+
+    for (let i = letterIndex + 1, nextNum = prevNum + 1; i < this.Letters.length; i++, nextNum++) {
+      if (nextNum > 8) break;
+      let cell = `${this.Letters[i]}${nextNum}`;
+      if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      }
+    }
+    for (let i = letterIndex - 1, nextNum = prevNum - 1; i >= 0; i--, nextNum--) {
+      if (nextNum <= 0) break;
+      let cell = `${this.Letters[i]}${nextNum}`;
+      if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      }
+    }
+    for (let i = letterIndex + 1, nextNum = prevNum - 1; i < this.Letters.length; i++, nextNum--) {
+      if (nextNum <= 0) break;
+      let cell = `${this.Letters[i]}${nextNum}`;
+      if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      }
+    }
+    for (let i = letterIndex - 1, nextNum = prevNum + 1; i >= 0; i--, nextNum++) {
+      if (nextNum <= 0) break;
+      let cell = `${this.Letters[i]}${nextNum}`;
+      if (cell == newCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      }
+    }
+  }
+  private queenMove(figure: Figure, cell: Cell) {
+    this.bishopMove(figure, cell);
+    this.rockMove(figure, cell);
+  }
 
   public makeTurn(side: string, figure?: Figure, cell?: Cell): void {
     if (this.sideToTurn != side) return;
@@ -191,10 +276,10 @@ export class GameProccess {
     if (!this.white[figure] && !this.black[figure]) return;
 
     if (/pawn/.test(figure)) this.pawnMove(figure, cell);
-    if (/R/.test(figure)) this.rockMove(cell);
+    if (/R/.test(figure)) this.rockMove(figure, cell);
     if (/K/.test(figure)) this.knightMove(figure, cell);
-    if (/B/.test(figure)) this.bishopMove(cell);
-    if (/Q/.test(figure)) this.queenMove(cell);
+    if (/B/.test(figure)) this.bishopMove(figure, cell);
+    if (/Q/.test(figure)) this.queenMove(figure, cell);
     this.sideToTurn == 'w'  ?
       this.sideToTurn = 'b' : 
       this.sideToTurn = 'w';
