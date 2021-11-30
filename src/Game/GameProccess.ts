@@ -147,8 +147,41 @@ export class GameProccess {
       }
     });
   }
-  private rockMove(cell: Cell) {}
-  private knightMove(cell: Cell) {}
+  private rockMove(cell: Cell) {
+
+  }
+  private knightMove(figure: Figure, cell: Cell) {
+    console.log(figure, cell);
+    let prevFigureCell;
+    if (this.sideToTurn == 'w') {
+      prevFigureCell = this.white[figure];
+    } else {
+      prevFigureCell = this.black[figure];
+    }
+    let [prevLetter, prevNum] = prevFigureCell;
+    let num = parseInt(prevNum, 10);
+    let nextLetters = this.findNextLetter(prevLetter);
+    let nextLetterRight = this.findNextLetter(nextLetters[1])[1];
+    let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
+    nextLetterLeft = nextLetterLeft == prevLetter ? null : nextLetterLeft;
+
+    let cells: Cell[] = [
+      `${nextLetters[1]}${num + 2}`,
+      `${nextLetterRight}${num + 1}`,
+      `${nextLetterRight}${num - 1}`,
+      `${nextLetters[1]}${num - 2}`,
+      `${nextLetters[0]}${num - 2}`,
+      `${nextLetterLeft}${num - 1}`,
+      `${nextLetterLeft}${num + 1}`,
+      `${nextLetters[0]}${num + 2}`
+    ];
+    cells.map((possibleCell: Cell) => {
+      if (cell == possibleCell) {
+        this.updateBoard(figure, cell);
+        this.strike(cell);
+      }
+    })
+  }
   private bishopMove(cell: Cell) {}
   private queenMove(cell: Cell) {}
 
@@ -159,7 +192,7 @@ export class GameProccess {
 
     if (/pawn/.test(figure)) this.pawnMove(figure, cell);
     if (/R/.test(figure)) this.rockMove(cell);
-    if (/K/.test(figure)) this.knightMove(cell);
+    if (/K/.test(figure)) this.knightMove(figure, cell);
     if (/B/.test(figure)) this.bishopMove(cell);
     if (/Q/.test(figure)) this.queenMove(cell);
     this.sideToTurn == 'w'  ?
