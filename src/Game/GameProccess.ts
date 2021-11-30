@@ -140,7 +140,6 @@ export class GameProccess {
     if (possibleNextDiagonalCell2 == cell && this.isEnemyInCell(cell)) {
       possibleMoves.push(cell);
     }
-    console.log(possibleMoves);
     possibleMoves.map((move: Cell) => {
       if (move == cell) {
         this.strike(cell);
@@ -156,7 +155,6 @@ export class GameProccess {
   public makeTurn(side: string, figure?: Figure, cell?: Cell): void {
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
-    figure = figure.replace(/-[w,b]/, '');
     if (!this.white[figure] && !this.black[figure]) return;
 
     if (/pawn/.test(figure)) this.pawnMove(figure, cell);
