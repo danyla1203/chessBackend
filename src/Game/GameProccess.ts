@@ -277,7 +277,7 @@ export class GameProccess {
     return this.rockMove(figure, cell);
   }
 
-  public makeTurn(side: string, figure?: Figure, cell?: Cell): StrikedData {
+  public makeTurn(side: string, figure?: Figure, cell?: Cell): StrikedData|null {
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
     if (!this.white[figure] && !this.black[figure]) return;
@@ -292,7 +292,7 @@ export class GameProccess {
     this.sideToTurn == 'w'  ?
       this.sideToTurn = 'b' : 
       this.sideToTurn = 'w';
-    return { strikedSide: this.sideToTurn, figure: striked }
+    if (striked) return { strikedSide: this.sideToTurn, figure: striked };
   }
 
   public state(): FiguresState {

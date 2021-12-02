@@ -60,10 +60,10 @@ export class WsServer {
           if (message.type == 'utf8' && game.isActive) {
             let data: TurnData = JSON.parse(message.utf8Data).payload;
             data.playerId = PlayerId;
-            const striked: StrikedData = game.makeTurn(data);
+            const striked: StrikedData|null = game.makeTurn(data);
             game.couple.map((player: Player) => {
               this.sendMessage(player.conn, 'UPDATE_STATE', game.actualState());
-              if (striked.figure) {
+              if (striked) {
                 this.sendMessage(player.conn, 'STRIKE', striked);
               }
             })
