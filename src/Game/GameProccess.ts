@@ -4,6 +4,10 @@ export type FiguresState = {
   black: {[index: Figure]: Cell};
   white: {[index: Figure]: Cell};
 }
+export type StrikedData = {
+  strikedSide: 'w'|'b';
+  figure?: Figure
+}
 export class GameProccess {
   Letters: string[]
   black: {[index: Figure]: Cell};
@@ -96,11 +100,12 @@ export class GameProccess {
       this.black[figure] = cell;
   }
 
-  private strike(cell: Cell): void {
+  private strike(cell: Cell): Figure {
     if (this.sideToTurn == 'w') {
       for (let figure in this.black) {
         if (this.black[figure] == cell) {
           delete this.black[figure];
+          return figure;
         }
       }
     } else {
@@ -108,12 +113,13 @@ export class GameProccess {
         if (this.white[figure] == cell) {
           console.log('strike');
           delete this.white[figure];
+          return figure;
         }
       }
     }
   }
 
-  private pawnMove(figure: Figure, newCell: Cell): void {
+  private pawnMove(figure: Figure, newCell: Cell): Figure|null {
     let prevFigureCell, sideToMove;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -140,14 +146,15 @@ export class GameProccess {
     if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(newCell)) {
       possibleMoves.push(newCell);
     }
-    possibleMoves.map((move: Cell) => {
-      if (move == newCell) {
-        this.strike(newCell);
+    for (let i = 0; i < possibleMoves.length; i++) {
+      if (possibleMoves[i] == newCell) {
+        let striked = this.strike(newCell);
         this.updateBoard(figure, newCell);
+        return striked;
       }
-    });
+    }
   }
-  private rockMove(figure: Figure, newCell: Cell): void {
+  private rockMove(figure: Figure, newCell: Cell): Figure|null {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -160,7 +167,7 @@ export class GameProccess {
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       } 
     }
     for (let i = prevNum - 1; i > 0; i--) {
@@ -168,7 +175,7 @@ export class GameProccess {
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       } 
     }
 
@@ -178,7 +185,7 @@ export class GameProccess {
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       } 
     }
     for (let i = letterIndex - 1; i >= 0; i--) {
@@ -186,12 +193,11 @@ export class GameProccess {
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       } 
     }
   }
-  private knightMove(figure: Figure, cell: Cell): void {
-    console.log(figure, cell);
+  private knightMove(figure: Figure, cell: Cell): Figure|null {
     let prevFigureCell;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -215,14 +221,14 @@ export class GameProccess {
       `${nextLetterLeft}${num + 1}`,
       `${nextLetters[0]}${num + 2}`
     ];
-    cells.map((possibleCell: Cell) => {
-      if (cell == possibleCell) {
+    for (let i = 0; i < cells.length; i++)  {
+      if (cell == cells[i]) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       }
-    })
+    }
   }
-  private bishopMove(figure: Figure, newCell: Cell) {
+  private bishopMove(figure: Figure, newCell: Cell): Figure|null {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -237,7 +243,7 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum - 1; i >= 0; i--, nextNum--) {
@@ -245,7 +251,7 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       }
     }
     for (let i = letterIndex + 1, nextNum = prevNum - 1; i < this.Letters.length; i++, nextNum--) {
@@ -253,7 +259,7 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum + 1; i >= 0; i--, nextNum++) {
@@ -261,28 +267,32 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         this.updateBoard(figure, cell);
-        this.strike(cell);
+        return this.strike(cell);
       }
     }
   }
-  private queenMove(figure: Figure, cell: Cell) {
-    this.bishopMove(figure, cell);
-    this.rockMove(figure, cell);
+  private queenMove(figure: Figure, cell: Cell): Figure|null {
+    let striked = this.bishopMove(figure, cell);
+    if (striked) return striked;
+    return this.rockMove(figure, cell);
   }
 
-  public makeTurn(side: string, figure?: Figure, cell?: Cell): void {
+  public makeTurn(side: string, figure?: Figure, cell?: Cell): StrikedData {
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
     if (!this.white[figure] && !this.black[figure]) return;
 
-    if (/pawn/.test(figure)) this.pawnMove(figure, cell);
-    if (/R/.test(figure)) this.rockMove(figure, cell);
-    if (/K/.test(figure)) this.knightMove(figure, cell);
-    if (/B/.test(figure)) this.bishopMove(figure, cell);
-    if (/Q/.test(figure)) this.queenMove(figure, cell);
+    let striked = null;
+
+    if (/pawn/.test(figure)) striked = this.pawnMove(figure, cell);
+    if (/R/.test(figure)) striked = this.rockMove(figure, cell);
+    if (/K/.test(figure)) striked = this.knightMove(figure, cell);
+    if (/B/.test(figure)) striked = this.bishopMove(figure, cell);
+    if (/Q/.test(figure)) striked = this.queenMove(figure, cell);
     this.sideToTurn == 'w'  ?
       this.sideToTurn = 'b' : 
       this.sideToTurn = 'w';
+    return { strikedSide: this.sideToTurn, figure: striked }
   }
 
   public state(): FiguresState {

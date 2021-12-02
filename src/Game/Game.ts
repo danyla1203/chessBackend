@@ -1,5 +1,5 @@
 import * as ws from 'websocket';
-import { Cell, Figure, FiguresState, GameProccess } from './GameProccess';
+import { Cell, Figure, FiguresState, GameProccess, StrikedData } from './GameProccess';
 
 export type TurnData = {
   playerId: string
@@ -11,8 +11,6 @@ export type Player = {
   conn: ws.connection;
   side: 'w' | 'b';
 }
-
-
 export class Game {
   couple: Player[];
   path: string;
@@ -48,11 +46,11 @@ export class Game {
     console.log('Game Start!');
   }
 
-  public makeTurn(turn: TurnData) {
+  public makeTurn(turn: TurnData): StrikedData {
     const sideToTurn = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    this.process.makeTurn(sideToTurn, turn.figure, turn.cell);
+    return this.process.makeTurn(sideToTurn, turn.figure, turn.cell);
   } 
   public actualState(): FiguresState {
     return this.process.state();
