@@ -46,11 +46,19 @@ export class Game {
     console.log('Game Start!');
   }
 
-  public makeTurn(turn: TurnData): StrikedData {
+  public makeTurn(turn: TurnData): any {
     const sideToTurn = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    return this.process.makeTurn(sideToTurn, turn.figure, turn.cell);
+    const moveData = this.process.verifyMove(sideToTurn, turn.figure, turn.cell);
+    if (!moveData) return;
+    if (moveData.canUpdate) {
+      this.process.updateBoard(turn.figure, turn.cell);
+    }
+    if (moveData.possibleStrike) {
+      this.process.removeFigure(moveData.possibleStrike);
+    }
+    this.process.setMoveSide();
   } 
   public actualState(): FiguresState {
     return this.process.state();

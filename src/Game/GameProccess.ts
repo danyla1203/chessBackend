@@ -14,6 +14,12 @@ export class GameProccess {
   white: {[index: Figure]: Cell};
   sideToTurn: 'w'|'b';
 
+  public setMoveSide() {
+    this.sideToTurn == 'w' ?
+      this.sideToTurn = 'b':
+      this.sideToTurn = 'w';
+  }
+
   private initBoard() {
     this.black = {
       'pawn1': 'a7',
@@ -94,32 +100,29 @@ export class GameProccess {
     }
   }
 
-  private updateBoard(figure: Figure, cell: Cell): void {
+  public updateBoard(figure: Figure, cell: Cell): void {
     this.sideToTurn == 'w' ?
       this.white[figure] = cell:
       this.black[figure] = cell;
   }
 
-  private strike(cell: Cell): Figure {
+  private possibleStrike(cell: Cell): Figure|null {
     if (this.sideToTurn == 'w') {
       for (let figure in this.black) {
         if (this.black[figure] == cell) {
-          delete this.black[figure];
           return figure;
         }
       }
     } else {
       for (let figure in this.white) {
         if (this.white[figure] == cell) {
-          console.log('strike');
-          delete this.white[figure];
           return figure;
         }
       }
     }
   }
 
-  private pawnMove(figure: Figure, newCell: Cell): Figure|null {
+  private canPawnMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell, sideToMove;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -148,13 +151,12 @@ export class GameProccess {
     }
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == newCell) {
-        let striked = this.strike(newCell);
-        this.updateBoard(figure, newCell);
-        return striked;
+        return true;
       }
     }
+    return false;
   }
-  private rockMove(figure: Figure, newCell: Cell): Figure|null {
+  private rockMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -166,16 +168,14 @@ export class GameProccess {
       let cell = `${prevLetter}${i}`;
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       } 
     }
     for (let i = prevNum - 1; i > 0; i--) {
       let cell = `${prevLetter}${i}`;
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       } 
     }
 
@@ -184,20 +184,18 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${prevNum}`;
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       } 
     }
     for (let i = letterIndex - 1; i >= 0; i--) {
       let cell = `${this.Letters[i]}${prevNum}`;
       if (!this.checkIsCellEmpty(cell)) break;
       else if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       } 
     }
   }
-  private knightMove(figure: Figure, cell: Cell): Figure|null {
+  private knightMove(figure: Figure, cell: Cell): boolean {
     let prevFigureCell;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -223,12 +221,11 @@ export class GameProccess {
     ];
     for (let i = 0; i < cells.length; i++)  {
       if (cell == cells[i]) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       }
     }
   }
-  private bishopMove(figure: Figure, newCell: Cell): Figure|null {
+  private bishopMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -242,59 +239,63 @@ export class GameProccess {
       if (nextNum > 8) break;
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum - 1; i >= 0; i--, nextNum--) {
       if (nextNum <= 0) break;
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       }
     }
     for (let i = letterIndex + 1, nextNum = prevNum - 1; i < this.Letters.length; i++, nextNum--) {
       if (nextNum <= 0) break;
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum + 1; i >= 0; i--, nextNum++) {
       if (nextNum <= 0) break;
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
-        this.updateBoard(figure, cell);
-        return this.strike(cell);
+        return true;
       }
     }
   }
-  private queenMove(figure: Figure, cell: Cell): Figure|null {
-    let striked = this.bishopMove(figure, cell);
-    if (striked) return striked;
-    return this.rockMove(figure, cell);
+  private queenMove(figure: Figure, cell: Cell): boolean {
+    let result = this.bishopMove(figure, cell);
+    return result || this.rockMove(figure, cell);
   }
 
-  public makeTurn(side: string, figure?: Figure, cell?: Cell): StrikedData|null {
+  public verifyMove(side: string, figure?: Figure, cell?: Cell): any {
     if (this.sideToTurn != side) return;
     if (!figure || !cell) return;
     if (!this.white[figure] && !this.black[figure]) return;
-
-    let striked = null;
-
-    if (/pawn/.test(figure)) striked = this.pawnMove(figure, cell);
-    if (/R/.test(figure)) striked = this.rockMove(figure, cell);
-    if (/K/.test(figure)) striked = this.knightMove(figure, cell);
-    if (/B/.test(figure)) striked = this.bishopMove(figure, cell);
-    if (/Q/.test(figure)) striked = this.queenMove(figure, cell);
-    this.sideToTurn == 'w'  ?
-      this.sideToTurn = 'b' : 
-      this.sideToTurn = 'w';
-    if (striked) return { strikedSide: this.sideToTurn, figure: striked };
+    let result = {
+      canUpdate: true, 
+      possibleStrike: this.possibleStrike(cell)
+    };
+    if (/pawn/.test(figure) && this.canPawnMove(figure, cell)) {
+      return result
+    } else if (/R/.test(figure) && this.rockMove(figure, cell)) {
+      return result
+    } else if (/K/.test(figure) && this.knightMove(figure, cell)) {
+      return result;
+    } else if (/B/.test(figure) && this.bishopMove(figure, cell)) {
+      return result;
+    } else if (/Q/.test(figure) && this.queenMove(figure, cell)) {
+      return result;
+    }
   }
-
+  public removeFigure(figure: Figure) {
+    if (this.sideToTurn == 'w') {
+      delete this.black[figure];
+    } else if (this.sideToTurn == 'b') {
+      delete this.white[figure];
+    }
+  }
   public state(): FiguresState {
     return {
       black: this.black,
