@@ -1,5 +1,5 @@
 import * as ws from 'websocket';
-import { Cell, Figure, FiguresState, GameProccess, StrikedData } from './GameProccess';
+import { Cell, Figure, FiguresState, GameProccess, ShahData, StrikedData } from './GameProccess';
 
 export type TurnData = {
   playerId: string
@@ -10,6 +10,10 @@ export type Player = {
   id: string
   conn: ws.connection;
   side: 'w' | 'b';
+}
+export type CompletedMove = {
+  shah: null|ShahData,
+  strikedData?: null|StrikedData
 }
 export class Game {
   couple: Player[];
@@ -46,19 +50,22 @@ export class Game {
     console.log('Game Start!');
   }
 
-  public makeTurn(turn: TurnData): any {
-    const sideToTurn = this.couple.find((player) => {
+  public makeTurn(turn: TurnData): null|CompletedMove {
+    const sideToTurn: 'w'|'b' = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    const moveData = this.process.verifyMove(sideToTurn, turn.figure, turn.cell);
-    if (!moveData) return;
-    if (moveData.canUpdate) {
-      this.process.updateBoard(turn.figure, turn.cell);
-    }
-    if (moveData.possibleStrike) {
-      this.process.removeFigure(moveData.possibleStrike);
-    }
+    const canMove: boolean = this.process.verifyMove(sideToTurn, turn.figure, turn.cell);
+    if (!canMove) return null;
+
+    const striked: null|StrikedData = this.process.possibleStrike(turn.cell);
+    if (striked) this.process.removeFigure(striked.figure);
+    this.process.updateBoard(turn.figure, turn.cell);
+    const shah: null|ShahData = this.process.isShah(turn.figure);
     this.process.setMoveSide();
+    return { 
+      shah: shah, 
+      strikedData: striked 
+    }
   } 
   public actualState(): FiguresState {
     return this.process.state();

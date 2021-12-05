@@ -6,18 +6,21 @@ export type FiguresState = {
 }
 export type StrikedData = {
   strikedSide: 'w'|'b';
-  figure?: Figure
+  figure: Figure;
+}
+export type ShahData = {
+  shachedSide: 'w'|'b';
+  byFigure: Figure;
 }
 export class GameProccess {
-  Letters: string[]
-  black: {[index: Figure]: Cell};
-  white: {[index: Figure]: Cell};
-  sideToTurn: 'w'|'b';
+  private Letters: string[];
+  private black: {[index: Figure]: Cell};
+  private white: {[index: Figure]: Cell};
+  private sideToTurn: 'w'|'b';
+  private shahData: null|ShahData;
 
   public setMoveSide() {
-    this.sideToTurn == 'w' ?
-      this.sideToTurn = 'b':
-      this.sideToTurn = 'w';
+    this.sideToTurn = this.getOpponentSide();
   }
 
   private initBoard() {
@@ -58,7 +61,11 @@ export class GameProccess {
       'R2': 'h1'
     }
   }
-
+  private getOpponentSide(): 'w'|'b' {
+    if (this.sideToTurn == 'w') return 'b';
+    else return 'w';
+      
+  }
   constructor() {
     this.initBoard();
     this.sideToTurn = 'w';
@@ -100,28 +107,6 @@ export class GameProccess {
     }
   }
 
-  public updateBoard(figure: Figure, cell: Cell): void {
-    this.sideToTurn == 'w' ?
-      this.white[figure] = cell:
-      this.black[figure] = cell;
-  }
-
-  private possibleStrike(cell: Cell): Figure|null {
-    if (this.sideToTurn == 'w') {
-      for (let figure in this.black) {
-        if (this.black[figure] == cell) {
-          return figure;
-        }
-      }
-    } else {
-      for (let figure in this.white) {
-        if (this.white[figure] == cell) {
-          return figure;
-        }
-      }
-    }
-  }
-
   private canPawnMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell, sideToMove;
     if (this.sideToTurn == 'w') {
@@ -156,7 +141,7 @@ export class GameProccess {
     }
     return false;
   }
-  private rockMove(figure: Figure, newCell: Cell): boolean {
+  private canRockMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -195,7 +180,7 @@ export class GameProccess {
       } 
     }
   }
-  private knightMove(figure: Figure, cell: Cell): boolean {
+  private canKnightMove(figure: Figure, cell: Cell): boolean {
     let prevFigureCell;
     if (this.sideToTurn == 'w') {
       prevFigureCell = this.white[figure];
@@ -225,7 +210,7 @@ export class GameProccess {
       }
     }
   }
-  private bishopMove(figure: Figure, newCell: Cell): boolean {
+  private canBishopMove(figure: Figure, newCell: Cell): boolean {
     let prevFigureCell;
     this.sideToTurn == 'w' ?
       prevFigureCell = this.white[figure]:
@@ -264,32 +249,67 @@ export class GameProccess {
       }
     }
   }
-  private queenMove(figure: Figure, cell: Cell): boolean {
-    let result = this.bishopMove(figure, cell);
-    return result || this.rockMove(figure, cell);
+  private canQueenMove(figure: Figure, cell: Cell): boolean {
+    let result = this.canBishopMove(figure, cell);
+    return result || this.canRockMove(figure, cell);
   }
 
-  public verifyMove(side: string, figure?: Figure, cell?: Cell): any {
-    if (this.sideToTurn != side) return;
-    if (!figure || !cell) return;
-    if (!this.white[figure] && !this.black[figure]) return;
-    let result = {
-      canUpdate: true, 
-      possibleStrike: this.possibleStrike(cell)
-    };
+  public updateBoard(figure: Figure, cell: Cell): void {
+    this.sideToTurn == 'w' ?
+      this.white[figure] = cell:
+      this.black[figure] = cell;
+  }
+
+  public possibleStrike(cell: Cell): null|StrikedData {
+    if (this.sideToTurn == 'w') {
+      for (let figure in this.black) {
+        if (this.black[figure] == cell) {
+          return { strikedSide: 'w', figure: figure };
+        }
+      }
+    } else {
+      for (let figure in this.white) {
+        if (this.white[figure] == cell) {
+          return { strikedSide: 'b', figure: figure };
+        }
+      }
+    }
+    return null;
+  }
+
+  public verifyMove(side: string, figure?: Figure, cell?: Cell): boolean {
+    if (this.sideToTurn != side) return false;
+    if (!figure || !cell) return false;
+    if (!this.white[figure] && !this.black[figure]) return false;
+    console.log(side, figure, cell, 'verify');
     if (/pawn/.test(figure) && this.canPawnMove(figure, cell)) {
-      return result
-    } else if (/R/.test(figure) && this.rockMove(figure, cell)) {
-      return result
-    } else if (/K/.test(figure) && this.knightMove(figure, cell)) {
-      return result;
-    } else if (/B/.test(figure) && this.bishopMove(figure, cell)) {
-      return result;
-    } else if (/Q/.test(figure) && this.queenMove(figure, cell)) {
-      return result;
+      return true
+    } else if (/R/.test(figure) && this.canRockMove(figure, cell)) {
+      return true
+    } else if (/K/.test(figure) && this.canKnightMove(figure, cell)) {
+      return true
+    } else if (/B/.test(figure) && this.canBishopMove(figure, cell)) {
+      return true;
+    } else if (/Q/.test(figure) && this.canQueenMove(figure, cell)) {
+      return true;
     }
   }
-  public removeFigure(figure: Figure) {
+  public isShah(movedFigure: Figure): null|ShahData {
+    let kingCell: Cell = this.sideToTurn == 'w' ?
+      this.black['Kn']:
+      this.white['Kn'];
+    if (this.verifyMove(this.sideToTurn, movedFigure, kingCell)) {
+      let shachedSide: 'w'|'b' = this.getOpponentSide();
+      let shah: ShahData = {
+        shachedSide: shachedSide, 
+        byFigure: movedFigure
+      };
+      this.shahData = shah;
+      return shah;
+    }
+    return null;
+  }
+  public removeFigure(figure: Figure): void {
     if (this.sideToTurn == 'w') {
       delete this.black[figure];
     } else if (this.sideToTurn == 'b') {

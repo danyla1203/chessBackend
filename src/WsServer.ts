@@ -1,7 +1,6 @@
 import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
-import { Game, Player, TurnData } from './Game/Game';
-import { StrikedData } from './Game/GameProccess';
+import { CompletedMove, Game, Player, TurnData } from './Game/Game';
 
 type Response = {
   type: string;
@@ -60,11 +59,16 @@ export class WsServer {
           if (message.type == 'utf8' && game.isActive) {
             let data: TurnData = JSON.parse(message.utf8Data).payload;
             data.playerId = PlayerId;
-            const striked: StrikedData|null = game.makeTurn(data);
+            const result: null|CompletedMove = game.makeTurn(data);
             game.couple.map((player: Player) => {
               this.sendMessage(player.conn, 'UPDATE_STATE', game.actualState());
-              if (striked) {
-                this.sendMessage(player.conn, 'STRIKE', striked);
+              if (result) {
+                if (result.strikedData) {
+                  this.sendMessage(player.conn, 'STRIKE', result.strikedData);
+                }
+                if (result.shah) {
+                  this.sendMessage(player.conn, 'SHAH', result.shah);
+                }
               }
             })
           }
