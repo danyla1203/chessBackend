@@ -343,11 +343,12 @@ export class GameProccess {
         return true;
       }
     }
+    this.sideToTurn = this.getOpponentSide();
+    this.shahData = null;
     this.sideToTurn == 'w' ? 
       this.white = sideStateCopy :
       this.black = sideStateCopy;
     return false;
-
   }
   public setShah(movedFigure: Figure): null|ShahData {
     let kingCell: Cell = this.sideToTurn == 'w' ?
