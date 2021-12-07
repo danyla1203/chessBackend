@@ -8,7 +8,7 @@ export type StrikedData = {
   strikedSide: 'w'|'b';
   figure: Figure;
 }
-type ShahData = {
+export type ShahData = {
   shachedSide: 'w'|'b';
   byFigures: Figure[];
 }
@@ -225,6 +225,10 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum - 1; i >= 0; i--, nextNum--) {
@@ -232,6 +236,10 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
       }
     }
     for (let i = letterIndex + 1, nextNum = prevNum - 1; i < this.Letters.length; i++, nextNum--) {
@@ -239,6 +247,10 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
       }
     }
     for (let i = letterIndex - 1, nextNum = prevNum + 1; i >= 0; i--, nextNum++) {
@@ -246,6 +258,10 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
       }
     }
   }
