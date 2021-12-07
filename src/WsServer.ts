@@ -61,8 +61,8 @@ export class WsServer {
             data.playerId = PlayerId;
             const result: null|CompletedMove = game.makeTurn(data);
             game.couple.map((player: Player) => {
-              this.sendMessage(player.conn, 'UPDATE_STATE', game.actualState());
               if (result) {
+                this.sendMessage(player.conn, 'UPDATE_STATE', game.actualState());
                 if (result.strikedData) {
                   this.sendMessage(player.conn, 'STRIKE', result.strikedData);
                 }
