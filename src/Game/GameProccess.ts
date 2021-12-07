@@ -151,33 +151,45 @@ export class GameProccess {
 
     for (let i = prevNum + 1; i < 9; i++) {
       let cell = `${prevLetter}${i}`;
-      if (!this.checkIsCellEmpty(cell)) break;
-      else if (cell == newCell) {
+      if (cell == newCell) {
         return true;
-      } 
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
+      }
     }
     for (let i = prevNum - 1; i > 0; i--) {
       let cell = `${prevLetter}${i}`;
-      if (!this.checkIsCellEmpty(cell)) break;
-      else if (cell == newCell) {
+      if (cell == newCell) {
         return true;
-      } 
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
+      }
     }
 
     let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
     for (let i = letterIndex + 1; i < this.Letters.length; i++) {
       let cell = `${this.Letters[i]}${prevNum}`;
-      if (!this.checkIsCellEmpty(cell)) break;
-      else if (cell == newCell) {
+      if (cell == newCell) {
         return true;
-      } 
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
+      }
     }
     for (let i = letterIndex - 1; i >= 0; i--) {
       let cell = `${this.Letters[i]}${prevNum}`;
-      if (!this.checkIsCellEmpty(cell)) break;
-      else if (cell == newCell) {
+      if (cell == newCell) {
         return true;
-      } 
+      } else if (this.isEnemyInCell(cell) && cell == newCell) {
+        return true;
+      } else if (!this.checkIsCellEmpty(cell)) {
+        break;
+      }
     }
   }
   private canKnightMove(figure: Figure, cell: Cell): boolean {
