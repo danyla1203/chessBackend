@@ -8,16 +8,16 @@ export type StrikedData = {
   strikedSide: 'w'|'b';
   figure: Figure;
 }
-export type ShahData = {
+type ShahData = {
   shachedSide: 'w'|'b';
-  byFigure: Figure;
+  byFigures: Figure[];
 }
 export class GameProccess {
   private Letters: string[];
   private black: {[index: Figure]: Cell};
   private white: {[index: Figure]: Cell};
   private sideToTurn: 'w'|'b';
-  private shahData: null|ShahData;
+  private shahData: null|ShahData
 
   public setMoveSide() {
     this.sideToTurn = this.getOpponentSide();
@@ -277,37 +277,63 @@ export class GameProccess {
     return null;
   }
 
-  public verifyMove(side: string, figure?: Figure, cell?: Cell): boolean {
+  public verifyFigureMove(side: string, figure?: Figure, cell?: Cell): boolean {
     if (this.sideToTurn != side) return false;
     if (!figure || !cell) return false;
     if (!this.white[figure] && !this.black[figure]) return false;
-    console.log(side, figure, cell, 'verify');
     if (/pawn/.test(figure) && this.canPawnMove(figure, cell)) {
-      return true
+      return true;
     } else if (/R/.test(figure) && this.canRockMove(figure, cell)) {
-      return true
+      return true;
     } else if (/K/.test(figure) && this.canKnightMove(figure, cell)) {
-      return true
+      return true;
     } else if (/B/.test(figure) && this.canBishopMove(figure, cell)) {
       return true;
     } else if (/Q/.test(figure) && this.canQueenMove(figure, cell)) {
       return true;
     }
   }
-  public isShah(movedFigure: Figure): null|ShahData {
+  public isShah(side: string, figure: Figure, cell: Cell): boolean {
+    if (!this.shahData) return false;
+    if (this.shahData.shachedSide != side) return false;
+    let sideStateCopy, kingCell;
+    if (this.sideToTurn == 'w') {
+      sideStateCopy = Object.assign({}, this.white);
+      kingCell = this.white['Kn'];
+      this.white[figure] = cell;
+    } else {
+      sideStateCopy = Object.assign({}, this.black);
+      kingCell = this.black['Kn'];
+      this.black[figure] = cell;
+    }
+    let oponent = this.getOpponentSide();
+    this.sideToTurn = oponent;
+    for (let i = 0; i < this.shahData.byFigures.length; i++) {
+      let byFigure = this.shahData.byFigures[i];
+      if (this.verifyFigureMove(oponent, byFigure, kingCell)) {
+        this.sideToTurn = this.getOpponentSide();
+        return true;
+      }
+    }
+    this.sideToTurn == 'w' ? 
+      this.white = sideStateCopy :
+      this.black = sideStateCopy;
+    return false;
+
+  }
+  public setShah(movedFigure: Figure): null|ShahData {
     let kingCell: Cell = this.sideToTurn == 'w' ?
       this.black['Kn']:
       this.white['Kn'];
-    if (this.verifyMove(this.sideToTurn, movedFigure, kingCell)) {
-      let shachedSide: 'w'|'b' = this.getOpponentSide();
-      let shah: ShahData = {
-        shachedSide: shachedSide, 
-        byFigure: movedFigure
-      };
-      this.shahData = shah;
-      return shah;
+    if (this.verifyFigureMove(this.sideToTurn, movedFigure, kingCell)) {
+      if (!this.shahData) {
+        this.shahData = { 
+          shachedSide: this.getOpponentSide(), 
+          byFigures: [movedFigure] 
+        }
+      } else this.shahData.byFigures.push(movedFigure);
     }
-    return null;
+    return this.shahData;
   }
   public removeFigure(figure: Figure): void {
     if (this.sideToTurn == 'w') {

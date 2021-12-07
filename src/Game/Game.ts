@@ -51,16 +51,17 @@ export class Game {
   }
 
   public makeTurn(turn: TurnData): null|CompletedMove {
-    const sideToTurn: 'w'|'b' = this.couple.find((player) => {
+    const { figure, cell } = turn;
+    const turnSide: 'w'|'b' = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    const canMove: boolean = this.process.verifyMove(sideToTurn, turn.figure, turn.cell);
-    if (!canMove) return null;
-
+    if (!this.process.verifyFigureMove(turnSide, figure, cell)) return null;
+    if (this.process.isShah(turnSide, figure, cell)) return null;
+    
     const striked: null|StrikedData = this.process.possibleStrike(turn.cell);
     if (striked) this.process.removeFigure(striked.figure);
-    this.process.updateBoard(turn.figure, turn.cell);
-    const shah: null|ShahData = this.process.isShah(turn.figure);
+    this.process.updateBoard(figure, cell);
+    const shah: null|ShahData = this.process.setShah(figure);
     this.process.setMoveSide();
     return { 
       shah: shah, 
