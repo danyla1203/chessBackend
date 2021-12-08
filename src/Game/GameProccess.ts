@@ -12,12 +12,18 @@ export type ShahData = {
   shachedSide: 'w'|'b';
   byFigures: Figure[];
 }
+type PossibleShahes = {
+  'w': Figure[],
+  'b': Figure[]
+}
 export class GameProccess {
   private Letters: string[];
+
   private black: {[index: Figure]: Cell};
   private white: {[index: Figure]: Cell};
   private sideToTurn: 'w'|'b';
-  private shahData: null|ShahData
+  private shahData: null|ShahData;
+  possibleShahes: null|PossibleShahes
 
   public setMoveSide() {
     this.sideToTurn = this.getOpponentSide();
@@ -70,6 +76,7 @@ export class GameProccess {
     this.initBoard();
     this.sideToTurn = 'w';
     this.Letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    this.possibleShahes = { 'w': [], 'b': [] };
   }
   private findNextLetter(letter: string): string[] {
     let result = [];
@@ -350,6 +357,55 @@ export class GameProccess {
       this.black = sideStateCopy;
     return false;
   }
+  public setPossibleShahes(figure: Figure, cell: Cell): void { 
+    const enemyKnCell = this.sideToTurn == 'w' ?
+      this.black['Kn'] : this.white['Kn'];
+    const whBoardCopy = Object.assign({}, this.white);
+    const blBoardCopy = Object.assign({}, this.black);
+
+    if (this.sideToTurn == 'w') {
+      this.black = { 'Kn': enemyKnCell };
+      this.white = {};
+      this.white[figure] = cell;
+    } else {
+      this.white = { 'Kn': enemyKnCell };
+      this.black = {};
+      this.black[figure] = cell;
+    }
+    
+    if (this.verifyFigureMove(this.sideToTurn, figure, enemyKnCell)) {
+      this.possibleShahes[this.getOpponentSide()].push(figure);
+    }
+    this.black = blBoardCopy;
+    this.white = whBoardCopy;
+  }
+  public checkPossibleShahes() {
+    const figures =  this.possibleShahes[this.sideToTurn];
+    const knCell = this.sideToTurn == 'b' ?
+      this.black['Kn'] : this.white['Kn'];
+    const whBoardCopy = Object.assign({}, this.white);
+    const blBoardCopy = Object.assign({}, this.black);
+    if (this.sideToTurn == 'b') {
+      this.black = { 'Kn': knCell };
+      this.white = {};
+    } else {
+      this.white = { 'Kn': knCell };
+      this.black = {};
+    }
+    this.sideToTurn = this.getOpponentSide();
+    for (let i = 0; i < figures.length; i++) {
+      this.sideToTurn == 'w' ?
+        this.white[figures[i]] = whBoardCopy[figures[i]]:
+        this.black[figures[i]] = blBoardCopy[figures[i]];
+      if (!this.verifyFigureMove(this.sideToTurn, figures[i], knCell)) {
+        figures.splice(i, 1);
+      }
+    }
+    this.sideToTurn = this.getOpponentSide();
+    this.black = blBoardCopy;
+    this.white = whBoardCopy;
+  }
+
   public setShah(movedFigure: Figure): null|ShahData {
     let kingCell: Cell = this.sideToTurn == 'w' ?
       this.black['Kn']:
