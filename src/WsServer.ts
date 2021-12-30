@@ -2,8 +2,17 @@ import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
 import { CompletedMove, Game, Player, TurnData } from './Game/Game';
 
+enum ResponseTypes {
+  INIT_GAME = 'INIT_GAME',
+  UPDATE_STATE = 'UPDATE_STATE',
+  STRIKE = 'STRIKE',
+  SHAH = 'SHAH',
+}
+enum ErrorTypes {
+  BAD_REQUEST = 'BAD_REQUEST',
+}
 type Response = {
-  type: string;
+  type: ResponseTypes|ErrorTypes;
   payload: any;
 }
 export class WsServer {
@@ -34,12 +43,25 @@ export class WsServer {
     }
   }
 
-  private sendMessage(conn: ws.connection, type: string, payload: any) {
+  private sendErrorMessage(conn: ws.connection, errType: ErrorTypes, errMessage: string) {
+    this.sendMessage(conn, errType, {errMessage: errMessage});
+  }
+
+  private sendMessage(conn: ws.connection, type: ResponseTypes|ErrorTypes, payload: any) {
     const data: Response = {
       type: type,
       payload: payload
     }
     conn.sendUTF(JSON.stringify(data));
+  }
+  private parseRequest(message: ws.Message): any {
+    if (message.type == 'utf8' ) {
+      try {
+        return JSON.parse(message.utf8Data).payload;
+      } catch (e: any) {
+        return null;
+      }
+    }
   }
 
   public run() {
@@ -50,27 +72,35 @@ export class WsServer {
 
       const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
       if (game) {
+        const payload: any = {board: game.actualState(), side: null} 
         if (game.couple.length == 1) {
-          this.sendMessage(newConn, 'INIT_GAME', {board: game.actualState(), side: 'w'});
+          payload.side = 'w';
+          this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
         } else if (game.couple.length == 2) {
-          this.sendMessage(newConn, 'INIT_GAME', {board: game.actualState(), side: 'b'});
+          payload.side = 'b';
+          this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
         }
+
         newConn.on('message', (message: ws.Message) => {
-          if (message.type == 'utf8' && game.isActive) {
-            let data: TurnData = JSON.parse(message.utf8Data).payload;
-            data.playerId = PlayerId;
-            const result: null|CompletedMove = game.makeTurn(data);
+          if (game.isActive) {
+            let req = this.parseRequest(message);
+            if (!req) {
+              this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Incorrect data');
+              return;
+            }
+            req.playerId = PlayerId;
+            const result: null|CompletedMove = game.makeTurn(req);
             game.couple.map((player: Player) => {
               if (result) {
-                this.sendMessage(player.conn, 'UPDATE_STATE', game.actualState());
+                this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, game.actualState());
                 if (result.strikedData) {
-                  this.sendMessage(player.conn, 'STRIKE', result.strikedData);
+                  this.sendMessage(player.conn, ResponseTypes.STRIKE, result.strikedData);
                 }
                 if (result.shah) {
-                  this.sendMessage(player.conn, 'SHAH', result.shah);
+                  this.sendMessage(player.conn, ResponseTypes.SHAH, result.shah);
                 }
               }
-            })
+            });
           }
         });
       } 
