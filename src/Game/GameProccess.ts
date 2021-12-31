@@ -303,10 +303,16 @@ export class GameProccess {
     return null;
   }
 
-  public verifyIncomingData(side?: string, figure?: Figure, cell?: Cell): boolean {
+  public verifyIncomingData
+  (
+    side?: string,
+    figure?: Figure,
+    cell?: Cell
+  ): boolean {
     if (!side || !figure || !cell) return false
     if (this.store.side != side) return false;
     if (!this.store.white[figure] && !this.store.black[figure]) return false;
+    return true;
   }
 
   public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
