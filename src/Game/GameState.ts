@@ -8,7 +8,7 @@ export class GameState {
 
   private sideToTurn: 'w'|'b';
 
-  constructor(black: Figures, white: Figures) {
+  constructor(white: Figures, black: Figures) {
     this.blackBoard = black;
     this.whiteBoard = white;
     this.sideToTurn = 'w';
