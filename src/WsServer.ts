@@ -99,6 +99,8 @@ export class WsServer {
                 if (result.shah) {
                   this.sendMessage(player.conn, ResponseTypes.SHAH, result.shah);
                 }
+              } else {
+                this.sendErrorMessage(player.conn, ErrorTypes.BAD_REQUEST, 'Bad request');
               }
             });
           }
