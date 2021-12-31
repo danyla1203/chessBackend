@@ -55,8 +55,15 @@ export class Game {
     const turnSide: 'w'|'b' = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    if (!this.process.verifyFigureMove(turnSide, figure, cell)) return null;
-    if (this.process.isShah(turnSide, figure, cell)) return null;
+    if (!this.process.verifyIncomingData(turnSide, figure, cell)) return null;
+
+    let board, opponent;
+    let state = this.process.state();
+    if (turnSide == 'w') { board = state.white; opponent = state.black }
+    else { board = state.black; opponent = state.white }
+    
+    if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
+    if (this.process.isShahRemainsAfterMove(turnSide, figure, cell)) return null;
     
     const striked: null|StrikedData = this.process.possibleStrike(turn.cell);
     if (striked) this.process.removeFigure(striked.figure);
@@ -64,7 +71,6 @@ export class Game {
     this.process.checkPossibleShahes();
     this.process.setPossibleShahes(figure, cell);
 
-    console.log(this.process.possibleShahes);
     const shah: null|ShahData = this.process.setShah(figure);
     this.process.setMoveSide();
     return { 
