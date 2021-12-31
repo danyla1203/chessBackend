@@ -64,7 +64,7 @@ export class GameProccess {
       'B2': 'g1',
       'R2': 'h1'
     }
-    return {'w': white, 'b': black}
+    return {white: white, black: black}
 
   }
   private getOpponentSide(): 'w'|'b' {
