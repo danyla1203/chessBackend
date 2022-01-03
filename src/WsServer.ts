@@ -90,6 +90,10 @@ export class WsServer {
             }
             req.playerId = PlayerId;
             const result: null|CompletedMove = game.makeTurn(req);
+            if (!result) {
+              this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Bad request');
+              return
+            }
             game.couple.map((player: Player) => {
               if (result) {
                 this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, game.actualState());
@@ -99,8 +103,6 @@ export class WsServer {
                 if (result.shah) {
                   this.sendMessage(player.conn, ResponseTypes.SHAH, result.shah);
                 }
-              } else {
-                this.sendErrorMessage(player.conn, ErrorTypes.BAD_REQUEST, 'Bad request');
               }
             });
           }
