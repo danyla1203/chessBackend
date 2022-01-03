@@ -15,10 +15,19 @@ export type ShahData = {
   byFigures: Figure[];
 }
 export type PossibleShahes = {
-  'w': Figure[],
-  'b': Figure[]
+  'w': Figure[];
+  'b': Figure[];
 }
 export type Figures = {[index: Figure]: Cell};
+
+type Boards = {
+  board: Figures;
+  enemyBoard: Figures;
+}
+type CellUpdate = {
+  prevCell: Cell;
+  newCell: Cell;
+}
 export class GameProccess {
   private Letters: string[];
   private store: GameState;
@@ -91,13 +100,13 @@ export class GameProccess {
     }
     return result;
   }
-  private checkIsCellEmpty(cell: string): boolean {
+  private checkIsCellEmpty(boards: Boards, cell: string): boolean {
     if (parseInt(cell[1], 10) > 8) return false;
-    for (let figure in this.store.white) {
-      if (this.store.white[figure] === cell) return false;
+    for (let figure in boards.board) {
+      if (boards.board[figure] === cell) return false;
     }
-    for (let figure in this.store.black) {
-      if (this.store.black[figure] === cell) return false;
+    for (let figure in boards.enemyBoard) {
+      if (boards.enemyBoard[figure] === cell) return false;
     }
     return true;
   }
@@ -108,12 +117,8 @@ export class GameProccess {
     return false;
   }
 
-  private canPawnMove
-  (
-    enemyBoard: Figures,
-    prevFigureCell: Cell, 
-    newCell: Cell
-  ): boolean {
+  private canPawnMove(boards: Boards, cells: CellUpdate): boolean {
+    let { newCell, prevCell } = cells
     let sideToMove;
     if (this.store.side == 'w') {
       sideToMove = 1;
@@ -121,7 +126,7 @@ export class GameProccess {
       sideToMove = -1;
     }
   
-    let [ prevLetter, prevNum ] = prevFigureCell;
+    let [ prevLetter, prevNum ] = prevCell;
     let nextLetters = this.findNextLetter(prevLetter);
     let possibleNextNum  = parseInt(prevNum) + sideToMove;
     let possibleMoves = [];
@@ -130,13 +135,13 @@ export class GameProccess {
     let possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
     let possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
 
-    if (possibleNextCell == newCell && this.checkIsCellEmpty(newCell)) {
+    if (possibleNextCell == newCell && this.checkIsCellEmpty(boards, newCell)) {
       possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell1 == newCell && this.isEnemyInCell(enemyBoard, newCell)) {
+    if (possibleNextDiagonalCell1 == newCell && this.isEnemyInCell(boards.enemyBoard, newCell)) {
       possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(enemyBoard, newCell)) {
+    if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(boards.enemyBoard, newCell)) {
       possibleMoves.push(newCell);
     }
     for (let i = 0; i < possibleMoves.length; i++) {
@@ -146,17 +151,17 @@ export class GameProccess {
     }
     return false;
   }
-  private canRockMove(enemyBoard: Figures, prevFigureCell: Cell, newCell: Cell): boolean {
-    let [ prevLetter, num ] = prevFigureCell;
+  private canRockMove(boards: Boards, cells: CellUpdate): boolean {
+    let { newCell, prevCell } = cells
+    let [ prevLetter, num ] = prevCell;
     let prevNum = parseInt(num, 10);
-
     for (let i = prevNum + 1; i < 9; i++) {
       let cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -164,9 +169,9 @@ export class GameProccess {
       let cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -176,9 +181,9 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -186,22 +191,22 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
   }
-  private canKnightMove(prevFigureCell: Cell, cell: Cell): boolean {
-    let [prevLetter, prevNum] = prevFigureCell;
+  private canKnightMove(boards: Boards, cells: CellUpdate): boolean {
+    let [prevLetter, prevNum] = cells.prevCell;
     let num = parseInt(prevNum, 10);
     let nextLetters = this.findNextLetter(prevLetter);
     let nextLetterRight = this.findNextLetter(nextLetters[1])[1];
     let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
     nextLetterLeft = nextLetterLeft == prevLetter ? null : nextLetterLeft;
 
-    let cells: Cell[] = [
+    let possibleCells: Cell[] = [
       `${nextLetters[1]}${num + 2}`,
       `${nextLetterRight}${num + 1}`,
       `${nextLetterRight}${num - 1}`,
@@ -211,14 +216,15 @@ export class GameProccess {
       `${nextLetterLeft}${num + 1}`,
       `${nextLetters[0]}${num + 2}`
     ];
-    for (let i = 0; i < cells.length; i++)  {
-      if (cell == cells[i]) {
+    for (let i = 0; i < possibleCells.length; i++)  {
+      if (cells.newCell == possibleCells[i]) {
         return true;
       }
     }
   }
-  private canBishopMove(enemyBoard: Figures, prevFigureCell: Cell, newCell: Cell): boolean {
-    let [ prevLetter, num ] = prevFigureCell;
+  private canBishopMove(boards: Boards, cells: CellUpdate): boolean {
+    let { newCell, prevCell } = cells
+    let [ prevLetter, num ] = prevCell;
     let prevNum = parseInt(num, 10);
     let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
 
@@ -227,9 +233,9 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -238,9 +244,9 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -249,9 +255,9 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
@@ -260,28 +266,35 @@ export class GameProccess {
       let cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(enemyBoard, cell) && cell == newCell) {
+      } else if (this.isEnemyInCell(boards.enemyBoard, cell) && cell == newCell) {
         return true;
-      } else if (!this.checkIsCellEmpty(cell)) {
+      } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
       }
     }
   }
-  private canQueenMove(board: Figures, prevFigureCell: Cell, cell: Cell): boolean {
-    let result = this.canBishopMove(board, prevFigureCell, cell);
-    return result || this.canRockMove(board, prevFigureCell, cell);
+  private canQueenMove(boards: Boards, cells: CellUpdate): boolean {
+    let result = this.canBishopMove(boards, cells);
+    return result || this.canRockMove(boards, cells);
   }
-  public verifyFigureMove(board: Figures, enemyBoard: Figures, figure?: Figure, cell?: Cell): boolean {
-    let prevFigureCell = board[figure];
-    if (/pawn/.test(figure) && this.canPawnMove(enemyBoard, prevFigureCell, cell)) {
+  public verifyFigureMove(board: Figures, enemyBoard: Figures, figure: Figure, cell: Cell): boolean {
+    let boards: Boards = {
+      board: board,
+      enemyBoard: enemyBoard
+    }
+    let cells: CellUpdate = {
+      prevCell: board[figure],
+      newCell: cell
+    }
+    if (/pawn/.test(figure) && this.canPawnMove(boards, cells)) {
       return true;
-    } else if (/R/.test(figure) && this.canRockMove(enemyBoard, prevFigureCell, cell)) {
+    } else if (/R/.test(figure) && this.canRockMove(boards, cells)) {
       return true;
-    } else if (/K/.test(figure) && this.canKnightMove(prevFigureCell, cell)) {
+    } else if (/K/.test(figure) && this.canKnightMove(boards, cells)) {
       return true;
-    } else if (/B/.test(figure) && this.canBishopMove(enemyBoard, prevFigureCell, cell)) {
+    } else if (/B/.test(figure) && this.canBishopMove(boards, cells)) {
       return true;
-    } else if (/Q/.test(figure) && this.canQueenMove(enemyBoard, prevFigureCell, cell)) {
+    } else if (/Q/.test(figure) && this.canQueenMove(boards, cells)) {
       return true;
     }
   }
@@ -303,12 +316,7 @@ export class GameProccess {
     return null;
   }
 
-  public verifyIncomingData
-  (
-    side?: string,
-    figure?: Figure,
-    cell?: Cell
-  ): boolean {
+  public verifyIncomingData(side?: string, figure?: Figure, cell?: Cell): boolean {
     if (!side || !figure || !cell) return false
     if (this.store.side != side) return false;
     if (!this.store.white[figure] && !this.store.black[figure]) return false;
@@ -343,30 +351,32 @@ export class GameProccess {
     return false;
   }
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
-    let enemyKnCell: Cell = this.store.side == 'w' ? this.store.black['Kn']:this.store.white['Kn'];
+    let enemyKnCell: Cell = this.store.side == 'w' ?
+      this.store.black['Kn']:
+      this.store.white['Kn'];
     let opponentBoard: Figures = { 'Kn': enemyKnCell }
     let board: Figures = {}
     board[figure] = cell;
-    
     if (this.verifyFigureMove(board, opponentBoard, figure, enemyKnCell)) {
-      this.store.setPossibleSide(this.getOpponentSide(), figure);
+      this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
   }
   public checkPossibleShahes(): void {
     const figures =  this.store.getPossibleShahes()[this.store.side];
     const knCell = this.store.side == 'b' ?
-      this.store.black['Kn'] : this.store.white['Kn'];
-    let board = {'Kn': knCell};
-    let opponentBoard: Figures = {};
-    
+      this.store.black['Kn']:
+      this.store.white['Kn'];
+    let board: Figures = {};
+    let opponentBoard: Figures = {'Kn': knCell};
+     
     for (let i = 0; i < figures.length; i++) {
       this.store.side == 'b' ?
-        opponentBoard[figures[i]] = this.store.white[figures[i]]:
-        opponentBoard[figures[i]] = this.store.black[figures[i]];
+        board[figures[i]] = this.store.white[figures[i]]:
+        board[figures[i]] = this.store.black[figures[i]];
       if (!this.verifyFigureMove(board, opponentBoard, figures[i], knCell)) {
         figures.splice(i, 1);
       }
-      opponentBoard = {};
+      board = {};
     }
   }
 

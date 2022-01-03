@@ -60,7 +60,7 @@ export class GameState {
   getPossibleShahes(): PossibleShahes {
     return this.possibleShahes;
   }
-  setPossibleSide(side: 'w'|'b', figure: Figure) {
+  setPossibleShah(side: 'w'|'b', figure: Figure) {
     this.possibleShahes[side].push(figure);
   }
 }
