@@ -341,8 +341,7 @@ export class GameProccess {
 
     for (let i = 0; i < this.store.shah.byFigures.length; i++) {
       let byFigure = this.store.shah.byFigures[i];
-      if (this.verifyFigureMove(board, opponentBoard, byFigure, kingCell)) {
-        this.store.turnSide = this.getOpponentSide();
+      if (this.verifyFigureMove(opponentBoard, board, byFigure, kingCell)) {
         return true;
       }
     };
