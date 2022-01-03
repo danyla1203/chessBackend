@@ -48,13 +48,9 @@ export class GameState {
     return this.shahData;
   }
   public setShahData(toSide: 'w'|'b', byFigure: Figure) {
-    if (this.shahData && this.shahData.byFigures.length >= 1) {
-      this.shahData.byFigures.push(byFigure);
-    } else {
-      this.shahData = { 
-        shachedSide: toSide,
-        byFigures: [byFigure]
-      }
+    this.shahData = { 
+      shachedSide: toSide,
+      byFigure: byFigure
     }
   }
   public getPossibleShahes(): PossibleShahes {

@@ -12,7 +12,7 @@ export type StrikedData = {
 }
 export type ShahData = {
   shachedSide: 'w'|'b';
-  byFigures: Figure[];
+  byFigure: Figure;
 }
 export type PossibleShahes = {
   'w': Figure[];
@@ -339,12 +339,10 @@ export class GameProccess {
     }
     board[figure] = cell;
 
-    for (let i = 0; i < this.store.shah.byFigures.length; i++) {
-      let byFigure = this.store.shah.byFigures[i];
-      if (this.verifyFigureMove(opponentBoard, board, byFigure, kingCell)) {
-        return true;
-      }
-    };
+    if (this.possibleStrike(cell)) return false;
+    if (this.verifyFigureMove(opponentBoard, board, this.store.shah.byFigure, kingCell)) {
+      return true;
+    }
 
     this.store.removeShah();
     return false;
