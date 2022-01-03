@@ -47,7 +47,7 @@ export class GameState {
   get shah() {
     return this.shahData;
   }
-  setShahData(toSide: 'w'|'b', byFigure: Figure) {
+  public setShahData(toSide: 'w'|'b', byFigure: Figure) {
     if (this.shahData && this.shahData.byFigures.length >= 1) {
       this.shahData.byFigures.push(byFigure);
     } else {
@@ -57,10 +57,17 @@ export class GameState {
       }
     }
   }
-  getPossibleShahes(): PossibleShahes {
+  public getPossibleShahes(): PossibleShahes {
     return this.possibleShahes;
   }
-  setPossibleShah(side: 'w'|'b', figure: Figure) {
+  public setPossibleShah(side: 'w'|'b', figure: Figure) {
     this.possibleShahes[side].push(figure);
+  }
+  public removeFigure(side: 'w'|'b', figure: Figure): void {
+    if (side == 'w') {
+      delete this.black[figure];
+    } else if (this.side == 'b') {
+      delete this.white[figure];
+    }
   }
 }

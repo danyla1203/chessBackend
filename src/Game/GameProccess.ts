@@ -396,11 +396,7 @@ export class GameProccess {
     return this.store.shah;
   }
   public removeFigure(figure: Figure): void {
-    if (this.store.side == 'w') {
-      delete this.store.black[figure];
-    } else if (this.store.side == 'b') {
-      delete this.store.white[figure];
-    }
+    this.store.removeFigure(this.store.turnSide, figure);
   }
   public state(): FiguresState {
     return {
