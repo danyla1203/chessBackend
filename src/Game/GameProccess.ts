@@ -313,7 +313,6 @@ export class GameProccess {
         }
       }
     }
-    return null;
   }
 
   public verifyIncomingData(side?: string, figure?: Figure, cell?: Cell): boolean {
@@ -326,6 +325,7 @@ export class GameProccess {
   public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != side) return false;
+    if (this.possibleStrike(cell).figure == this.store.shah.byFigure) return false;
 
     let kingCell, board, opponentBoard;
     if (this.store.side == 'w') {
@@ -339,14 +339,15 @@ export class GameProccess {
     }
     board[figure] = cell;
 
-    if (this.possibleStrike(cell)) return false;
     if (this.verifyFigureMove(opponentBoard, board, this.store.shah.byFigure, kingCell)) {
       return true;
     }
-
-    this.store.removeShah();
     return false;
   }
+  public removeShah(): void {
+    this.store.removeShah();
+  }
+
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
     let enemyKnCell: Cell = this.store.side == 'w' ?
       this.store.black['Kn']:
@@ -370,6 +371,7 @@ export class GameProccess {
       this.store.side == 'b' ?
         board[figures[i]] = this.store.white[figures[i]]:
         board[figures[i]] = this.store.black[figures[i]];
+      if (!board[figures[i]]) continue;
       if (!this.verifyFigureMove(board, opponentBoard, figures[i], knCell)) {
         figures.splice(i, 1);
       }

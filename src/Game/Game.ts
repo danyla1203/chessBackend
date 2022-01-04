@@ -64,6 +64,7 @@ export class Game {
     
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahRemainsAfterMove(turnSide, figure, cell)) return null;
+    this.process.removeShah();
     
     const striked: null|StrikedData = this.process.possibleStrike(turn.cell);
     if (striked) this.process.removeFigure(striked.figure);
