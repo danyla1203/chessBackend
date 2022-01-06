@@ -303,13 +303,13 @@ export class GameProccess {
     if (this.store.side == 'w') {
       for (let figure in this.store.black) {
         if (this.store.black[figure] == cell) {
-          return { strikedSide: 'w', figure: figure };
+          return { strikedSide: 'b', figure: figure };
         }
       }
     } else {
       for (let figure in this.store.white) {
         if (this.store.white[figure] == cell) {
-          return { strikedSide: 'b', figure: figure };
+          return { strikedSide: 'w', figure: figure };
         }
       }
     }
