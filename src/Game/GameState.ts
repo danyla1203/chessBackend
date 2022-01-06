@@ -61,9 +61,9 @@ export class GameState {
   }
   public removeFigure(side: 'w'|'b', figure: Figure): void {
     if (side == 'w') {
-      delete this.black[figure];
-    } else if (this.side == 'b') {
       delete this.white[figure];
+    } else {
+      delete this.black[figure];
     }
   }
 }

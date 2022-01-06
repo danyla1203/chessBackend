@@ -299,16 +299,18 @@ export class GameProccess {
     }
   }
 
-  public possibleStrike(cell: Cell): null|StrikedData {
-    if (this.store.side == 'w') {
+  public possibleStrike(turnSide: 'w'|'b', cell: Cell): null|StrikedData {
+    if (turnSide == 'w') {
       for (let figure in this.store.black) {
         if (this.store.black[figure] == cell) {
+          this.store.removeFigure('b', figure);
           return { strikedSide: 'b', figure: figure };
         }
       }
     } else {
       for (let figure in this.store.white) {
         if (this.store.white[figure] == cell) {
+          this.store.removeFigure('w', figure);
           return { strikedSide: 'w', figure: figure };
         }
       }
@@ -325,7 +327,7 @@ export class GameProccess {
   public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != side) return false;
-    let strike: null|StrikedData = this.possibleStrike(cell);
+    let strike: null|StrikedData = this.possibleStrike(side, cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }

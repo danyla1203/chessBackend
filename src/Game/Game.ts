@@ -12,7 +12,7 @@ export type Player = {
   side: 'w' | 'b';
 }
 export type CompletedMove = {
-  shah: null|ShahData,
+  shah?: null|ShahData,
   strikedData?: null|StrikedData
 }
 export class Game {
@@ -66,7 +66,7 @@ export class Game {
     if (this.process.isShahRemainsAfterMove(turnSide, figure, cell)) return null;
     this.process.removeShah();
     
-    const striked: null|StrikedData = this.process.possibleStrike(turn.cell);
+    const striked: null|StrikedData = this.process.possibleStrike(turnSide, turn.cell);
     if (striked) this.process.removeFigure(striked.figure);
     this.process.updateBoard(figure, cell);
     this.process.checkPossibleShahes();
