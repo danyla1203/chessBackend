@@ -398,8 +398,10 @@ export class GameProccess {
     }
     return this.store.shah;
   }
-  public removeFigure(figure: Figure): void {
-    this.store.removeFigure(this.store.turnSide, figure);
+  public removeFigure(turnSide: 'w'|'b', figure: Figure): void {
+    turnSide == 'w' ? 
+      this.store.removeFigure('b', figure) :
+      this.store.removeFigure('w', figure);
   }
   public state(): FiguresState {
     return {

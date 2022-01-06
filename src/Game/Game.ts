@@ -67,7 +67,7 @@ export class Game {
     this.process.removeShah();
     
     const striked: null|StrikedData = this.process.possibleStrike(turnSide, turn.cell);
-    if (striked) this.process.removeFigure(striked.figure);
+    if (striked) this.process.removeFigure(turnSide, striked.figure);
     this.process.updateBoard(figure, cell);
     this.process.checkPossibleShahes();
     this.process.setPossibleShahes(figure, cell);
