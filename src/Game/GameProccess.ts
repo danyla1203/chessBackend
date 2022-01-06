@@ -325,7 +325,10 @@ export class GameProccess {
   public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != side) return false;
-    if (this.possibleStrike(cell).figure == this.store.shah.byFigure) return false;
+    let strike: null|StrikedData = this.possibleStrike(cell);
+    if (strike) {
+      if (strike.figure == this.store.shah.byFigure) return false;
+    }
 
     let kingCell, board, opponentBoard;
     if (this.store.side == 'w') {
