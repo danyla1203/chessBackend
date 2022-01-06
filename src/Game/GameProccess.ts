@@ -303,14 +303,12 @@ export class GameProccess {
     if (turnSide == 'w') {
       for (let figure in this.store.black) {
         if (this.store.black[figure] == cell) {
-          this.store.removeFigure('b', figure);
           return { strikedSide: 'b', figure: figure };
         }
       }
     } else {
       for (let figure in this.store.white) {
         if (this.store.white[figure] == cell) {
-          this.store.removeFigure('w', figure);
           return { strikedSide: 'w', figure: figure };
         }
       }
