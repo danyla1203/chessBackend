@@ -20,11 +20,7 @@ export class GameState {
       this.white[figure] = cell:
       this.black[figure] = cell;
   }
-  public deleteFigure(side: 'w'|'b', figure: Figure): void {
-    this.sideToTurn == 'w' ?
-      delete this.white[figure]:
-      delete this.black[figure]
-  } 
+  
   public removeShah() {
     this.shahData = null;
   }
@@ -61,9 +57,9 @@ export class GameState {
   }
   public removeFigure(side: 'w'|'b', figure: Figure): void {
     if (side == 'w') {
-      delete this.white[figure];
+      delete this.whiteBoard[figure];
     } else {
-      delete this.black[figure];
+      delete this.blackBoard[figure];
     }
   }
 }
