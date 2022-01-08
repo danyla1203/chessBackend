@@ -21,13 +21,13 @@ export class Game {
   process: GameProccess;
   isActive: boolean
 
-  static isNewGame(path: string, games: Game[]) {
+  static isNewGame(path: string, games: Game[]): boolean {
     for (let i = 0; i < games.length; i++) {
       if (games[i].path == path) return false;
     }
     return true;
   }
-  static findGame(path: string, playerId: string, games: Game[]) {
+  static findGame(path: string, playerId: string, games: Game[]): Game|undefined {
     return games.find((game) => {
       return game.path == path &&
              game.couple[0].id !== playerId &&
@@ -42,10 +42,10 @@ export class Game {
     this.isActive = false;
   }
   
-  public addPlayer(conn: ws.connection, id: string) {
+  public addPlayer(conn: ws.connection, id: string): void {
     this.couple.push({ side: 'b', conn: conn, id: id});
   }
-  public start() {
+  public start(): void {
     this.isActive = true;
     console.log('Game Start!');
   }

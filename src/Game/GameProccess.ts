@@ -32,11 +32,11 @@ export class GameProccess {
   private Letters: string[];
   private store: GameState;
 
-  public setMoveSide() {
+  public setMoveSide(): void {
     this.store.turnSide = this.getOpponentSide();
   }
 
-  private initBoard(): any {
+  private initBoard(): FiguresState {
     const black = {
       'pawn1': 'a7',
       'pawn2': 'b7',

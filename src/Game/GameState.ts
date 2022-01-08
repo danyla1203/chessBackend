@@ -21,7 +21,7 @@ export class GameState {
       this.black[figure] = cell;
   }
   
-  public removeShah() {
+  public removeShah(): void {
     this.shahData = null;
   }
 
@@ -43,7 +43,7 @@ export class GameState {
   get shah() {
     return this.shahData;
   }
-  public setShahData(toSide: 'w'|'b', byFigure: Figure) {
+  public setShahData(toSide: 'w'|'b', byFigure: Figure): void {
     this.shahData = { 
       shachedSide: toSide,
       byFigure: byFigure
@@ -52,7 +52,7 @@ export class GameState {
   public getPossibleShahes(): PossibleShahes {
     return this.possibleShahes;
   }
-  public setPossibleShah(side: 'w'|'b', figure: Figure) {
+  public setPossibleShah(side: 'w'|'b', figure: Figure): void {
     this.possibleShahes[side].push(figure);
   }
   public removeFigure(side: 'w'|'b', figure: Figure): void {
