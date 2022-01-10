@@ -347,31 +347,31 @@ export class GameProccess {
     }
     return false;
   }
-  public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
+  public isShahRemainsAfterMove
+  (
+    board: Figures, 
+    opponent: Figures, 
+    figure: Figure, 
+    cell: Cell
+  ): boolean {
     if (!this.store.shah) return false;
-    if (this.store.shah.shachedSide != side) return false;
-    let strike: null|StrikedData = this.possibleStrike(side, cell);
+    if (this.store.shah.shachedSide != this.store.side) return false;
+    let strike: null|StrikedData = this.possibleStrike(this.store.side, cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
 
-    let kingCell, board, opponentBoard;
-    if (this.store.side == 'w') {
-      board =  Object.assign({}, this.store.white);
-      opponentBoard =  Object.assign({}, this.store.black);
-      kingCell = this.store.white['Kn'];
-    } else {
-      board =  Object.assign({}, this.store.black);
-      opponentBoard =  Object.assign({}, this.store.white);
-      kingCell = this.store.black['Kn'];
-    }
     board[figure] = cell;
-
-    if (this.verifyFigureMove(opponentBoard, board, this.store.shah.byFigure, kingCell)) {
+    let knCell;
+    this.store.side == 'w' ?
+      knCell = this.store.white['Kn']:
+      knCell = this.store.black['Kn'];
+    if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
       return true;
     }
     return false;
   }
+  
   public removeShah(): void {
     this.store.removeShah();
   }

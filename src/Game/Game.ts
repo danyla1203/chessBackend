@@ -63,7 +63,7 @@ export class Game {
     else { board = state.black; opponent = state.white }
     
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
-    if (this.process.isShahRemainsAfterMove(turnSide, figure, cell)) return null;
+    if (this.process.isShahRemainsAfterMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(board, opponent, figure, cell)) return null;
     this.process.removeShah();
     
