@@ -322,6 +322,31 @@ export class GameProccess {
     return true;
   }
 
+  public isShahAppearsAfterMove
+  (
+    board: Figures, 
+    opponent: Figures,
+    figure: Figure, 
+    cell: Cell
+  ): boolean {
+    let possibleShahes = this.store.getPossibleShahes();
+    let knCell, shahes;
+    if (this.store.side == 'w') {
+      knCell = this.store.white['Kn'];
+      shahes = possibleShahes['w'];
+    } else {
+      knCell = this.store.black['Kn'];
+      shahes = possibleShahes['b'];
+    }
+
+    board[figure] = cell;
+    for (let i = 0; i < shahes.length; i++) {
+      if (this.verifyFigureMove(opponent, board, shahes[i], knCell)) {
+        return true;
+      }
+    }
+    return false;
+  }
   public isShahRemainsAfterMove(side: string, figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != side) return false;
