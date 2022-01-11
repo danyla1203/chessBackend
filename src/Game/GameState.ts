@@ -56,10 +56,8 @@ export class GameState {
     this.possibleShahes[side].push(figure);
   }
   public removeFigure(side: 'w'|'b', figure: Figure): void {
-    if (side == 'w') {
-      delete this.whiteBoard[figure];
-    } else {
+    side == 'w' ?
+      delete this.whiteBoard[figure]:
       delete this.blackBoard[figure];
-    }
   }
 }
