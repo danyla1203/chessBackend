@@ -14,6 +14,10 @@ export type ShahData = {
   shachedSide: 'w'|'b';
   byFigure: Figure;
 }
+export type MateData = {
+  matedSide: 'w'|'b',
+  byFigure: Figure
+}
 export type PossibleShahes = {
   'w': Figure[];
   'b': Figure[];
@@ -371,7 +375,7 @@ export class GameProccess {
     }
     return false;
   }
-  
+
   public removeShah(): void {
     this.store.removeShah();
   }
@@ -422,6 +426,9 @@ export class GameProccess {
       this.store.setShahData(this.getOpponentSide(), movedFigure);
     }
     return this.store.shah;
+  }
+  public setMate(): null|MateData {
+    if (!this.store.shah) return null;
   }
   public removeFigure(turnSide: 'w'|'b', figure: Figure): void {
     turnSide == 'w' ? 

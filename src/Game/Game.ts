@@ -1,25 +1,26 @@
 import * as ws from 'websocket';
-import { Cell, Figure, FiguresState, GameProccess, ShahData, StrikedData } from './GameProccess';
+import { Cell, Figure, FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
 
 export type TurnData = {
-  playerId: string
+  playerId: string;
   figure: Figure;
   cell: Cell;
 }
 export type Player = {
-  id: string
+  id: string;
   conn: ws.connection;
   side: 'w' | 'b';
 }
 export type CompletedMove = {
-  shah?: null|ShahData,
-  strikedData?: null|StrikedData
+  mate?: null|MateData;
+  shah?: null|ShahData;
+  strikedData?: null|StrikedData;
 }
 export class Game {
   couple: Player[];
   path: string;
   process: GameProccess;
-  isActive: boolean
+  isActive: boolean;
 
   static isNewGame(path: string, games: Game[]): boolean {
     for (let i = 0; i < games.length; i++) {
@@ -74,8 +75,10 @@ export class Game {
     this.process.setPossibleShahes(figure, cell);
 
     const shah: null|ShahData = this.process.setShah(figure);
+    const mate: null|MateData = this.process.setMate();
     this.process.setMoveSide();
     return { 
+      mate: mate,
       shah: shah, 
       strikedData: striked 
     }
