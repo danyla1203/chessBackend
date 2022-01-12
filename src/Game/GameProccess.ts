@@ -22,6 +22,10 @@ export type PossibleShahes = {
   'w': Figure[];
   'b': Figure[];
 }
+export type StrikeAround = {
+  'w': Set<Figure>;
+  'b': Set<Figure>;
+};
 export type Figures = {[index: Figure]: Cell};
 
 type Boards = {
@@ -84,6 +88,29 @@ export class GameProccess {
     if (this.store.side == 'w') return 'b';
     else return 'w';
       
+  }
+  private getCellsAround(cell: Cell): Cell[] {
+    let [letter, number] = cell;
+    let [leftLetter, rightLetter] = this.findNextLetter(letter);
+    let nextNum = parseInt(number, 10) + 1;
+    let prevNum = parseInt(number, 10) - 1;
+    let result: Cell[] = [
+      `${letter}${nextNum}`,
+      `${letter}${prevNum}`,
+      `${rightLetter}${nextNum}`,
+      `${rightLetter}${prevNum}`,
+      `${leftLetter}${nextNum}`,
+      `${leftLetter}${prevNum}`,
+      `${leftLetter}${number}`,
+      `${rightLetter}${number}`
+    ];
+    for (let i = 0; i < result.length; i++) {
+      let [lett, num] = result[i];
+      if (parseInt(num) > 8 || parseInt(num) < 1 || result[i].length > 2) {
+        result.splice(i, 1);
+      }
+    }
+    return result;
   }
   constructor() {
     const { white, black } = this.initBoard();
@@ -379,6 +406,15 @@ export class GameProccess {
   public removeShah(): void {
     this.store.removeShah();
   }
+  private getEmptyCellsAroundKn(board: Figures, knCell: Cell): Cell[] {
+    let result: Cell[] = [];
+    this.getCellsAround(knCell).map((cell: Cell) => {
+      if (this.checkIsCellEmpty({board: board, enemyBoard: board}, cell)) {
+        result.push(cell);
+      }
+    })
+    return result;
+  }
 
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
     let enemyKnCell: Cell = this.store.side == 'w' ?
@@ -391,20 +427,48 @@ export class GameProccess {
       this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
   }
+  public setFiguresAroundKn(board: Figures, opponent: Figures, figure: Figure) {
+    let possibleKnMoves = this.store.side == 'w'?
+      this.getEmptyCellsAroundKn(this.store.black, this.store.black['Kn']):
+      this.getEmptyCellsAroundKn(this.store.white, this.store.white['Kn']);
+    possibleKnMoves.map((cell: Cell) => {
+      if (this.verifyFigureMove(board, opponent, figure, cell)) {
+        this.store.setStrikeAroundKn(this.getOpponentSide(), figure);
+      }
+    });
+    console.log(this.store.getStrikeAroundKn());
+  }
+  public checkFiguresAroundKn(board: Figures, opponent: Figures) {
+    let figures = this.store.getStrikeAroundKn()[this.store.side];
+    let knCell = board['Kn'];
+    let possibleKnMoves = this.getEmptyCellsAroundKn(board, knCell);
+    
+    for (let figure in figures) {
+      let canMove = false;
+      for (let j = 0; j < possibleKnMoves.length; j++) {
+        if (this.verifyFigureMove(opponent, board, figure, possibleKnMoves[j])) {
+          canMove = true;
+          break;
+        }
+      }
+      if (!canMove) {
+        figures.delete(figure)
+      }
+    }
+  }
   public checkPossibleShahes(): void {
     const figures =  this.store.getPossibleShahes()[this.store.side];
     const knCell = this.store.side == 'b' ?
       this.store.black['Kn']:
       this.store.white['Kn'];
     let board: Figures = {};
-    let opponentBoard: Figures = {'Kn': knCell};
-     
+    let opponent: Figures = {'Kn': knCell};
     for (let i = 0; i < figures.length; i++) {
       this.store.side == 'b' ?
         board[figures[i]] = this.store.white[figures[i]]:
         board[figures[i]] = this.store.black[figures[i]];
       if (!board[figures[i]]) continue;
-      if (!this.verifyFigureMove(board, opponentBoard, figures[i], knCell)) {
+      if (!this.verifyFigureMove(board, opponent, figures[i], knCell)) {
         figures.splice(i, 1);
       }
       board = {};
