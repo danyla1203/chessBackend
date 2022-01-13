@@ -19,8 +19,8 @@ export type MateData = {
   byFigure: Figure
 }
 export type PossibleShahes = {
-  'w': Figure[];
-  'b': Figure[];
+  'w': Set<Figure>;
+  'b': Set<Figure>;
 }
 export type StrikeAround = {
   'w': Set<Figure>;
@@ -371,8 +371,8 @@ export class GameProccess {
     }
 
     board[figure] = cell;
-    for (let i = 0; i < shahes.length; i++) {
-      if (this.verifyFigureMove(opponent, board, shahes[i], knCell)) {
+    for (let figure in shahes) {
+      if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
       }
     }
@@ -463,13 +463,13 @@ export class GameProccess {
       this.store.white['Kn'];
     let board: Figures = {};
     let opponent: Figures = {'Kn': knCell};
-    for (let i = 0; i < figures.length; i++) {
+    for (let figure of figures) {
       this.store.side == 'b' ?
-        board[figures[i]] = this.store.white[figures[i]]:
-        board[figures[i]] = this.store.black[figures[i]];
-      if (!board[figures[i]]) continue;
-      if (!this.verifyFigureMove(board, opponent, figures[i], knCell)) {
-        figures.splice(i, 1);
+        board[figure] = this.store.white[figure]:
+        board[figure] = this.store.black[figure];
+      if (!board[figure]) continue;
+      if (!this.verifyFigureMove(board, opponent, figure, knCell)) {
+        figures.delete(figure)
       }
       board = {};
     }

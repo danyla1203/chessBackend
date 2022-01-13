@@ -13,7 +13,7 @@ export class GameState {
     this.blackBoard = black;
     this.whiteBoard = white;
     this.sideToTurn = 'w';
-    this.possibleShahes = { 'w': [], 'b': [] };
+    this.possibleShahes = { 'w': new Set(), 'b': new Set() };
     this.strikeAroundKn = { 'w': new Set(), 'b': new Set() };
   }
 
@@ -58,7 +58,7 @@ export class GameState {
     return this.strikeAroundKn;
   }
   public setPossibleShah(side: 'w'|'b', figure: Figure): void {
-    this.possibleShahes[side].push(figure);
+    this.possibleShahes[side].add(figure);
   }
   public setStrikeAroundKn(side: 'w'|'b', figure: Figure): void {
     this.strikeAroundKn[side].add(figure);
@@ -67,5 +67,8 @@ export class GameState {
     side == 'w' ?
       delete this.whiteBoard[figure]:
       delete this.blackBoard[figure];
+    
+    this.possibleShahes[side].delete(figure);
+    this.strikeAroundKn[side].delete(figure);
   }
 }
