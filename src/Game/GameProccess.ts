@@ -369,6 +369,11 @@ export class GameProccess {
       knCell = this.store.black['Kn'];
       shahes = possibleShahes['b'];
     }
+    let strike: null|StrikedData = this.possibleStrike(this.store.side, cell);
+    if (strike) {
+      if (shahes.has(strike.figure)) return false;
+    }
+    
     board[figure] = cell;
     for (let figure of shahes) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {

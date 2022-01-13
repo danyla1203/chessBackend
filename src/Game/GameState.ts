@@ -64,11 +64,14 @@ export class GameState {
     this.strikeAroundKn[side].add(figure);
   }
   public removeFigure(side: 'w'|'b', figure: Figure): void {
-    side == 'w' ?
-      delete this.whiteBoard[figure]:
-      delete this.blackBoard[figure];
-    
-    this.possibleShahes[side].delete(figure);
-    this.strikeAroundKn[side].delete(figure);
+    if (side == 'w') {
+      delete this.whiteBoard[figure];
+      this.possibleShahes['b'].delete(figure);
+      this.strikeAroundKn['b'].delete(figure);
+    } else {
+      delete this.black[figure];
+      this.possibleShahes['w'].delete(figure);
+      this.strikeAroundKn['w'].delete(figure);
+    }
   }
 }
