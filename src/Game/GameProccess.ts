@@ -330,13 +330,13 @@ export class GameProccess {
       return true;
     } else if (/R/.test(figure) && this.canRockMove(boards, cells)) {
       return true;
-    } else if (/K/.test(figure) && this.canKnightMove(boards, cells)) {
+    } else if (/Kn/.test(figure) && this.canKnMove(boards, cells)) {
       return true;
     } else if (/B/.test(figure) && this.canBishopMove(boards, cells)) {
       return true;
     } else if (/Q/.test(figure) && this.canQueenMove(boards, cells)) {
       return true;
-    } else if (/Kn/.test(figure) && this.canKnMove(boards, cells)) {
+    } else if (/K/.test(figure) && this.canKnightMove(boards, cells)) {
       return true;
     }
   }
