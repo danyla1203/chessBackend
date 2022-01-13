@@ -439,14 +439,14 @@ export class GameProccess {
     console.log(this.store.getStrikeAroundKn());
   }
   public checkFiguresAroundKn(board: Figures, opponent: Figures) {
-    let figures = this.store.getStrikeAroundKn()[this.store.side];
-    let knCell = board['Kn'];
-    let possibleKnMoves = this.getEmptyCellsAroundKn(board, knCell);
-    
-    for (let figure in figures) {
+    let figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
+    let knCell = opponent['Kn'];
+    let possibleKnMoves = this.getEmptyCellsAroundKn(opponent, knCell);
+
+    for (let figure of figures) {
       let canMove = false;
       for (let j = 0; j < possibleKnMoves.length; j++) {
-        if (this.verifyFigureMove(opponent, board, figure, possibleKnMoves[j])) {
+        if (this.verifyFigureMove(board, opponent, figure, possibleKnMoves[j])) {
           canMove = true;
           break;
         }
