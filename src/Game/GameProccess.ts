@@ -308,6 +308,15 @@ export class GameProccess {
     let result = this.canBishopMove(boards, cells);
     return result || this.canRockMove(boards, cells);
   }
+  private canKnMove(boards: Boards, cells: CellUpdate): boolean {
+    let possibleMoves = this.getEmptyCellsAroundKn(boards.board, cells.prevCell);
+    for (let i = 0; i < possibleMoves.length; i++) {
+      if (possibleMoves[i] == cells.newCell) {
+        return true;
+      }
+    }
+    return false;
+  }
   public verifyFigureMove(board: Figures, enemyBoard: Figures, figure: Figure, cell: Cell): boolean {
     let boards: Boards = {
       board: board,
@@ -326,6 +335,8 @@ export class GameProccess {
     } else if (/B/.test(figure) && this.canBishopMove(boards, cells)) {
       return true;
     } else if (/Q/.test(figure) && this.canQueenMove(boards, cells)) {
+      return true;
+    } else if (/Kn/.test(figure) && this.canKnMove(boards, cells)) {
       return true;
     }
   }
@@ -496,6 +507,7 @@ export class GameProccess {
   }
   public setMate(): null|MateData {
     if (!this.store.shah) return null;
+
   }
   public removeFigure(turnSide: 'w'|'b', figure: Figure): void {
     turnSide == 'w' ? 
