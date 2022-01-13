@@ -369,9 +369,8 @@ export class GameProccess {
       knCell = this.store.black['Kn'];
       shahes = possibleShahes['b'];
     }
-
     board[figure] = cell;
-    for (let figure in shahes) {
+    for (let figure of shahes) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
       }
@@ -436,7 +435,6 @@ export class GameProccess {
         this.store.setStrikeAroundKn(this.getOpponentSide(), figure);
       }
     });
-    console.log(this.store.getStrikeAroundKn());
   }
   public checkFiguresAroundKn(board: Figures, opponent: Figures) {
     let figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
