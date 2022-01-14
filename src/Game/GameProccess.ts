@@ -506,9 +506,52 @@ export class GameProccess {
     }
     return this.store.shah;
   }
-  public setMate(): null|MateData {
+  public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
+    if (this.possibleStrike(this.getOpponentSide(), cell)) return null;
 
+    let enemyKnCell, board, opponentBoard;
+    if (this.store.side == 'w') {
+      enemyKnCell = this.store.getBlack()['Kn'];
+      board = this.store.getWhite();
+      opponentBoard = this.store.getBlack();
+    } else {
+      enemyKnCell = this.store.getWhite()['Kn'];
+      board = this.store.getBlack();
+      opponentBoard = this.store.getWhite();
+    }
+    let emptyCells: Cell[] = this.getEmptyCellsAroundKn(opponentBoard, enemyKnCell);
+    let figuresAroundKn = this.store.getStrikeAroundKn()[this.getOpponentSide()];
+
+    let canKnMoveCells: Cell[] = [];
+    for (let i = 0; i < emptyCells.length; i++) {
+      let isStrike = false;
+      for (let figure of figuresAroundKn) {
+        if (this.verifyFigureMove(board, opponentBoard, figure, board[figure])) {
+          isStrike = true;
+          break;
+        }
+      }
+      if (!isStrike) {
+        canKnMoveCells.push(emptyCells[i]);
+      }
+    }
+    if (canKnMoveCells.length == 0) {
+      return {
+        matedSide: this.getOpponentSide(),
+        byFigure: movedFigure
+      }
+    } else {
+      for (let i = 0; i < canKnMoveCells.length; i++) {
+        if (this.verifyFigureMove(board, opponentBoard, movedFigure, canKnMoveCells[i])) {
+          return {
+            matedSide: this.getOpponentSide(),
+            byFigure: movedFigure
+          }
+        }
+      }
+      return null;
+    }
   }
   public removeFigure(turnSide: 'w'|'b', figure: Figure): void {
     turnSide == 'w' ? 

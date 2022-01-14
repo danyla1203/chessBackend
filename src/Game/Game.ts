@@ -62,7 +62,7 @@ export class Game {
     let state = this.process.state();
     if (turnSide == 'w') { board = state.white; opponent = state.black }
     else { board = state.black; opponent = state.white }
-    
+
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahRemainsAfterMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(board, opponent, figure, cell)) return null;
@@ -77,7 +77,7 @@ export class Game {
     this.process.setFiguresAroundKn(board, opponent, figure);
 
     const shah: null|ShahData = this.process.setShah(figure);
-    const mate: null|MateData = this.process.setMate();
+    const mate: null|MateData = this.process.setMate(figure, cell);
     this.process.setMoveSide();
     return { 
       mate: mate,
