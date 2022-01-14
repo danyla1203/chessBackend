@@ -7,6 +7,7 @@ enum ResponseTypes {
   UPDATE_STATE = 'UPDATE_STATE',
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
+  MATE = 'MATE'
 }
 enum ErrorTypes {
   BAD_REQUEST = 'BAD_REQUEST',
@@ -102,6 +103,9 @@ export class WsServer {
                 }
                 if (result.shah) {
                   this.sendMessage(player.conn, ResponseTypes.SHAH, result.shah);
+                }
+                if (result.mate) {
+                  this.sendMessage(player.conn, ResponseTypes.MATE, result.mate);
                 }
               }
             });
