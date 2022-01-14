@@ -343,14 +343,14 @@ export class GameProccess {
 
   public possibleStrike(turnSide: 'w'|'b', cell: Cell): null|StrikedData {
     if (turnSide == 'w') {
-      for (let figure in this.store.black) {
-        if (this.store.black[figure] == cell) {
+      for (let figure in this.store.getWhite()) {
+        if (this.store.getBlack()[figure] == cell) {
           return { strikedSide: 'b', figure: figure };
         }
       }
     } else {
-      for (let figure in this.store.white) {
-        if (this.store.white[figure] == cell) {
+      for (let figure in this.store.getWhite()) {
+        if (this.store.getWhite()[figure] == cell) {
           return { strikedSide: 'w', figure: figure };
         }
       }
@@ -360,7 +360,7 @@ export class GameProccess {
   public verifyIncomingData(side?: string, figure?: Figure, cell?: Cell): boolean {
     if (!side || !figure || !cell) return false
     if (this.store.side != side) return false;
-    if (!this.store.white[figure] && !this.store.black[figure]) return false;
+    if (!this.store.getWhite()[figure] && !this.store.getBlack()[figure]) return false;
     return true;
   }
 
@@ -374,18 +374,19 @@ export class GameProccess {
     let possibleShahes = this.store.getPossibleShahes();
     let knCell, shahes;
     if (this.store.side == 'w') {
-      knCell = this.store.white['Kn'];
+      knCell = this.store.getWhite()['Kn'];
       shahes = possibleShahes['w'];
     } else {
-      knCell = this.store.black['Kn'];
+      knCell = this.store.getBlack()['Kn'];
       shahes = possibleShahes['b'];
     }
     let strike: null|StrikedData = this.possibleStrike(this.store.side, cell);
     if (strike) {
       if (shahes.has(strike.figure)) return false;
     }
-    
+    console.log(figure, cell, this.store.state);
     board[figure] = cell;
+    console.log(figure, cell, this.store.state);
     for (let figure of shahes) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
@@ -410,8 +411,8 @@ export class GameProccess {
     board[figure] = cell;
     let knCell;
     this.store.side == 'w' ?
-      knCell = this.store.white['Kn']:
-      knCell = this.store.black['Kn'];
+      knCell = this.store.getWhite()['Kn']:
+      knCell = this.store.getBlack()['Kn'];
     if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
       return true;
     }
@@ -433,8 +434,8 @@ export class GameProccess {
 
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
     let enemyKnCell: Cell = this.store.side == 'w' ?
-      this.store.black['Kn']:
-      this.store.white['Kn'];
+      this.store.getBlack()['Kn']:
+      this.store.getWhite()['Kn'];
     let opponentBoard: Figures = { 'Kn': enemyKnCell }
     let board: Figures = {}
     board[figure] = cell;
@@ -444,8 +445,8 @@ export class GameProccess {
   }
   public setFiguresAroundKn(board: Figures, opponent: Figures, figure: Figure) {
     let possibleKnMoves = this.store.side == 'w'?
-      this.getEmptyCellsAroundKn(this.store.black, this.store.black['Kn']):
-      this.getEmptyCellsAroundKn(this.store.white, this.store.white['Kn']);
+      this.getEmptyCellsAroundKn(this.store.getBlack(), this.store.getBlack()['Kn']):
+      this.getEmptyCellsAroundKn(this.store.getWhite(), this.store.getWhite()['Kn']);
     possibleKnMoves.map((cell: Cell) => {
       if (this.verifyFigureMove(board, opponent, figure, cell)) {
         this.store.setStrikeAroundKn(this.getOpponentSide(), figure);
@@ -473,14 +474,14 @@ export class GameProccess {
   public checkPossibleShahes(): void {
     const figures =  this.store.getPossibleShahes()[this.store.side];
     const knCell = this.store.side == 'b' ?
-      this.store.black['Kn']:
-      this.store.white['Kn'];
+      this.store.getBlack()['Kn']:
+      this.store.getWhite()['Kn'];
     let board: Figures = {};
     let opponent: Figures = {'Kn': knCell};
     for (let figure of figures) {
       this.store.side == 'b' ?
-        board[figure] = this.store.white[figure]:
-        board[figure] = this.store.black[figure];
+        board[figure] = this.store.getWhite()[figure]:
+        board[figure] = this.store.getBlack()[figure];
       if (!board[figure]) continue;
       if (!this.verifyFigureMove(board, opponent, figure, knCell)) {
         figures.delete(figure)
@@ -492,13 +493,13 @@ export class GameProccess {
   public setShah(movedFigure: Figure): null|ShahData {
     let knCell, board, opponentBoard;
     if (this.store.side == 'w') {
-      knCell = this.store.black['Kn'];
-      board = this.store.white;
-      opponentBoard = this.store.black;
+      knCell = this.store.getBlack()['Kn'];
+      board = this.store.getWhite();
+      opponentBoard = this.store.getBlack();
     } else {
-      knCell = this.store.white['Kn'];
-      board = this.store.black;
-      opponentBoard = this.store.white;
+      knCell = this.store.getWhite()['Kn'];
+      board = this.store.getBlack();
+      opponentBoard = this.store.getWhite();
     }
     if (this.verifyFigureMove(board, opponentBoard, movedFigure, knCell)) {
       this.store.setShahData(this.getOpponentSide(), movedFigure);
@@ -516,8 +517,8 @@ export class GameProccess {
   }
   public state(): FiguresState {
     return {
-      white: this.store.white,
-      black: this.store.black,
+      white: this.store.getWhite(),
+      black: this.store.getBlack(),
     }
   }
   public updateBoard(figure: Figure, cell: Cell): void {

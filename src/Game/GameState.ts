@@ -19,22 +19,22 @@ export class GameState {
 
   public updateBoard(figure: Figure, cell: Cell): void {
     this.sideToTurn == 'w' ?
-      this.white[figure] = cell:
-      this.black[figure] = cell;
+      this.whiteBoard[figure] = cell:
+      this.blackBoard[figure] = cell;
   }
   
   public removeShah(): void {
     this.shahData = null;
   }
 
-  get black() {
-    return this.blackBoard;
+  public getBlack(): Figures {
+    return Object.assign({}, this.blackBoard);
   }
-  get white() {
-    return this.whiteBoard;
+  public getWhite(): Figures {
+    return Object.assign({}, this.whiteBoard);
   }
   get state() {
-    return {'w': this.white, 'b': this.black}
+    return {'w': this.getWhite(), 'b': this.getBlack()}
   }
   get side() {
     return this.sideToTurn;
@@ -69,7 +69,7 @@ export class GameState {
       this.possibleShahes['b'].delete(figure);
       this.strikeAroundKn['b'].delete(figure);
     } else {
-      delete this.black[figure];
+      delete this.blackBoard[figure];
       this.possibleShahes['w'].delete(figure);
       this.strikeAroundKn['w'].delete(figure);
     }
