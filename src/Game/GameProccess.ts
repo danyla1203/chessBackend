@@ -55,12 +55,12 @@ export class GameProccess {
       'pawn7': 'g7',
       'pawn8': 'h7',
       'R1': 'a8',
-      'B1': 'b8',
-      'K1': 'c8',
+      'B1': 'c8',
+      'K1': 'b8',
       'Q': 'd8',
       'Kn': 'e8',
-      'K2': 'f8',
-      'B2': 'g8',
+      'K2': 'g8',
+      'B2': 'f8',
       'R2': 'h8'
     };
     const white = {
@@ -73,12 +73,12 @@ export class GameProccess {
       'pawn7': 'g2',
       'pawn8': 'h2',
       'R1': 'a1',
-      'B1': 'b1',
-      'K1': 'c1',
+      'B1': 'c1',
+      'K1': 'b1',
       'Q': 'd1',
       'Kn': 'e1',
-      'K2': 'f1',
-      'B2': 'g1',
+      'K2': 'g1',
+      'B2': 'f1',
       'R2': 'h1'
     }
     return {white: white, black: black}
