@@ -157,9 +157,10 @@ export class GameProccess {
       sideToMove = -1;
     }
   
-    let [ prevLetter, prevNum ] = prevCell;
+    let [ prevLetter, prevNumber ] = prevCell;
+    let prevNum = parseInt(prevNumber, 10);
     let nextLetters = this.findNextLetter(prevLetter);
-    let possibleNextNum  = parseInt(prevNum) + sideToMove;
+    let possibleNextNum  = prevNum + sideToMove;
     let possibleMoves = [];
 
     let possibleNextCell = `${prevLetter}${possibleNextNum}`;
@@ -174,6 +175,11 @@ export class GameProccess {
     }
     if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(boards.enemyBoard, newCell)) {
       possibleMoves.push(newCell);
+    }
+    if (this.store.side == 'w' && prevNum == 2) {
+      possibleMoves.push(`${prevLetter}${prevNum + 2}`);
+    } else if (this.store.side == 'b' && prevNum == 7) {
+      possibleMoves.push(`${prevLetter}${prevNum - 2}`);
     }
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == newCell) {
