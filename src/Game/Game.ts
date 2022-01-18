@@ -56,7 +56,7 @@ export class Game {
 
     let { board, opponent } = this.process.getBoards();
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
-    if (this.process.isShahRemainsAfterMove(board, opponent, figure, cell)) return null;
+    if (this.process.isShahRemainsAfterMove(figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(figure, cell)) return null;
     this.process.removeShah();
 

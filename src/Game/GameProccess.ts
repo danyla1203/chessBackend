@@ -372,25 +372,17 @@ export class GameProccess {
     }
     return false;
   }
-  public isShahRemainsAfterMove
-  (
-    board: Figures, 
-    opponent: Figures, 
-    figure: Figure, 
-    cell: Cell
-  ): boolean {
+  public isShahRemainsAfterMove(figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != this.store.side) return false;
+    let { board, opponent } = this.getBoards();
+    let knCell = board['Kn'];
+    
     let strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
-
     board[figure] = cell;
-    let knCell;
-    this.store.side == 'w' ?
-      knCell = this.store.getWhite()['Kn']:
-      knCell = this.store.getBlack()['Kn'];
     if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
       return true;
     }
