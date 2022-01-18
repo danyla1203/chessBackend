@@ -47,19 +47,6 @@ export class Game {
     this.isActive = true;
     console.log('Game Start!');
   }
-  private getBoards() {
-    let side = this.process.getSide();
-    let state = this.process.state();
-    let board, opponent;
-    if (side == 'w') { 
-      board = state.white; 
-      opponent = state.black 
-    } else { 
-      board = state.black; 
-      opponent = state.white 
-    }
-    return { board, opponent };
-  }
   public makeTurn(turn: TurnData): null|CompletedMove {
     const { figure, cell } = turn;
     const turnSide: 'w'|'b' = this.couple.find((player) => {
@@ -67,13 +54,13 @@ export class Game {
     }).side;
     if (!this.process.isIncomingDataValid(turnSide, figure, cell)) return null;
 
-    let { board, opponent } = this.getBoards();
+    let { board, opponent } = this.process.getBoards();
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahRemainsAfterMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(board, opponent, figure, cell)) return null;
     this.process.removeShah();
-    
-    const striked: null|StrikedData = this.process.possibleStrike(turnSide, turn.cell);
+
+    const striked: null|StrikedData = this.process.isStrikeAfterMove(turn.cell);
     if (striked) this.process.removeFigure(turnSide, striked.figure);
     this.process.updateBoard(figure, cell);
     this.process.checkPossibleShahes();
