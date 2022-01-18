@@ -64,7 +64,7 @@ export class Game {
     if (striked) this.process.removeFigure(this.process.getOpponentSide(), striked.figure);
     this.process.updateBoard(figure, cell);
     this.process.checkPossibleShahes();
-    this.process.checkFiguresAroundKn(board, opponent);
+    this.process.checkFiguresAroundKn();
     this.process.setPossibleShahes(figure, cell);
     this.process.setFiguresStrikeAroundKn(figure);
 

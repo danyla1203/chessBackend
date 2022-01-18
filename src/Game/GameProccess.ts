@@ -422,8 +422,9 @@ export class GameProccess {
       }
     });
   }
-  public checkFiguresAroundKn(board: Figures, opponent: Figures) {
+  public checkFiguresAroundKn() {
     let figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
+    let { board, opponent } = this.getBoards();
     let knCell = opponent['Kn'];
     let possibleKnMoves = this.getEmptyCellsAroundKn(opponent, knCell);
 
