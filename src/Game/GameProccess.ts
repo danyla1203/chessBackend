@@ -510,17 +510,6 @@ export class GameProccess {
     }
     return this.store.shah;
   }
-  private canOpponentStrikeFigure(figureCell: Cell): boolean {
-    let opponent = this.store.state[this.getOpponentSide()];
-    let board = this.store.state[this.store.side];
-    for (let opFigure in opponent) {
-      if (opFigure == 'Kn') continue;
-      if (this.verifyFigureMove(opponent, board, opFigure, figureCell)) {
-        return true;
-      }
-    }
-    return false;
-  }
   public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
 
@@ -534,11 +523,16 @@ export class GameProccess {
       board = this.store.getBlack();
       opponentBoard = this.store.getWhite();
     }
-    if (this.canOpponentStrikeFigure(cell)) return null;
-    console.log('m');
+
+    for (let opFigure in opponentBoard) {
+      if (opFigure == 'Kn') continue;
+      if (this.verifyFigureMove(opponentBoard, board, opFigure, cell)) {
+        return null;
+      }
+    }
+
     let emptyCells: Cell[] = this.getEmptyCellsAroundKn(opponentBoard, enemyKnCell);
     let figuresAroundKn = this.store.getStrikeAroundKn()[this.getOpponentSide()];
-    console.log(figuresAroundKn, emptyCells);
     let canKnMoveCells: Cell[] = [];
     for (let i = 0; i < emptyCells.length; i++) {
       let isStrike = false;
