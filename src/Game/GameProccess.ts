@@ -362,14 +362,12 @@ export class GameProccess {
       }
     }
   }
-
-  public verifyIncomingData(side?: string, figure?: Figure, cell?: Cell): boolean {
-    if (!side || !figure || !cell) return false
+  public isIncomingDataValid(side?: 'w'|'b', figure?: Figure, cell?: Cell): boolean {
+    if (!side || !figure || !cell) return false;
     if (this.store.side != side) return false;
     if (!this.store.getWhite()[figure] && !this.store.getBlack()[figure]) return false;
     return true;
   }
-
   public isShahAppearsAfterMove
   (
     board: Figures, 
@@ -573,6 +571,9 @@ export class GameProccess {
       white: this.store.getWhite(),
       black: this.store.getBlack(),
     }
+  }
+  public getSide(): 'w'|'b' {
+    return this.store.side;
   }
   public updateBoard(figure: Figure, cell: Cell): void {
     this.store.updateBoard(figure, cell);
