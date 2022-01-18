@@ -21,7 +21,6 @@ export class Game {
   path: string;
   process: GameProccess;
   isActive: boolean;
-
   static isNewGame(path: string, games: Game[]): boolean {
     for (let i = 0; i < games.length; i++) {
       if (games[i].path == path) return false;
@@ -35,14 +34,12 @@ export class Game {
              game.couple.length < 2;
     });
   }
-
   constructor(path: string, initiatorConn: ws.connection, id: string) {
     this.couple = [{ conn: initiatorConn, side: 'w', id: id }];
     this.path = path;
     this.process = new GameProccess();
     this.isActive = false;
   }
-  
   public addPlayer(conn: ws.connection, id: string): void {
     this.couple.push({ side: 'b', conn: conn, id: id});
   }
@@ -50,19 +47,27 @@ export class Game {
     this.isActive = true;
     console.log('Game Start!');
   }
-
+  private getBoards() {
+    let side = this.process.getSide();
+    let state = this.process.state();
+    let board, opponent;
+    if (side == 'w') { 
+      board = state.white; 
+      opponent = state.black 
+    } else { 
+      board = state.black; 
+      opponent = state.white 
+    }
+    return { board, opponent };
+  }
   public makeTurn(turn: TurnData): null|CompletedMove {
     const { figure, cell } = turn;
     const turnSide: 'w'|'b' = this.couple.find((player) => {
       return player.id == turn.playerId;
     }).side;
-    if (!this.process.verifyIncomingData(turnSide, figure, cell)) return null;
+    if (!this.process.isIncomingDataValid(turnSide, figure, cell)) return null;
 
-    let board, opponent;
-    let state = this.process.state();
-    if (turnSide == 'w') { board = state.white; opponent = state.black }
-    else { board = state.black; opponent = state.white }
-
+    let { board, opponent } = this.getBoards();
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahRemainsAfterMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(board, opponent, figure, cell)) return null;
