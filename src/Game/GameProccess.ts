@@ -84,9 +84,6 @@ export class GameProccess {
     return {white: white, black: black}
 
   }
-  private getOpponentSide(): 'w'|'b' {
-    return this.store.side == 'w' ? 'b':'w';
-  }
   private getCellsAround(cell: Cell): Cell[] {
     let [letter, number] = cell;
     let [leftLetter, rightLetter] = this.findNextLetter(letter);
@@ -550,10 +547,11 @@ export class GameProccess {
       return null;
     }
   }
+  public getOpponentSide(): 'w'|'b' {
+    return this.store.side == 'w' ? 'b':'w';
+  }
   public removeFigure(turnSide: 'w'|'b', figure: Figure): void {
-    turnSide == 'w' ? 
-      this.store.removeFigure('b', figure) :
-      this.store.removeFigure('w', figure);
+    this.store.removeFigure(turnSide, figure);
   }
   public state(): FiguresState {
     return {
