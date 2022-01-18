@@ -354,28 +354,18 @@ export class GameProccess {
     if (!this.store.getWhite()[figure] && !this.store.getBlack()[figure]) return false;
     return true;
   }
-  public isShahAppearsAfterMove
-  (
-    board: Figures, 
-    opponent: Figures,
-    figure: Figure, 
-    cell: Cell
-  ): boolean {
+  public isShahAppearsAfterMove(figure: Figure, cell: Cell): boolean {
     let possibleShahes = this.store.getPossibleShahes();
-    let knCell, shahes;
-    if (this.store.side == 'w') {
-      knCell = this.store.getWhite()['Kn'];
-      shahes = possibleShahes['w'];
-    } else {
-      knCell = this.store.getBlack()['Kn'];
-      shahes = possibleShahes['b'];
-    }
+    let { board, opponent } = this.getBoards();
+    let knCell = board['Kn'];
+    let possibleShahesForSide = possibleShahes[this.store.side];
+
     let strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
-      if (shahes.has(strike.figure)) return false;
+      if (possibleShahesForSide.has(strike.figure)) return false;
     }
     board[figure] = cell;
-    for (let figure of shahes) {
+    for (let figure of possibleShahesForSide) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
       }
