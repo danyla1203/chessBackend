@@ -317,6 +317,15 @@ export class GameProccess {
     }
     return false;
   }
+  private getEmptyCellsAroundKn(board: Figures, knCell: Cell): Cell[] {
+    let result: Cell[] = [];
+    this.getCellsAround(knCell).map((cell: Cell) => {
+      if (this.checkIsCellEmpty({board: board, opponent: board}, cell)) {
+        result.push(cell);
+      }
+    })
+    return result;
+  }
   public verifyFigureMove(board: Figures, enemyBoard: Figures, figure: Figure, cell: Cell): boolean {
     let boards: Boards = {
       board: board,
@@ -377,7 +386,7 @@ export class GameProccess {
     if (this.store.shah.shachedSide != this.store.side) return false;
     let { board, opponent } = this.getBoards();
     let knCell = board['Kn'];
-    
+
     let strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
@@ -388,20 +397,9 @@ export class GameProccess {
     }
     return false;
   }
-
   public removeShah(): void {
     this.store.removeShah();
   }
-  private getEmptyCellsAroundKn(board: Figures, knCell: Cell): Cell[] {
-    let result: Cell[] = [];
-    this.getCellsAround(knCell).map((cell: Cell) => {
-      if (this.checkIsCellEmpty({board: board, opponent: board}, cell)) {
-        result.push(cell);
-      }
-    })
-    return result;
-  }
-
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
     let enemyKnCell: Cell = this.store.side == 'w' ?
       this.store.getBlack()['Kn']:
@@ -413,7 +411,8 @@ export class GameProccess {
       this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
   }
-  public setFiguresAroundKn(board: Figures, opponent: Figures, figure: Figure) {
+  public setFiguresStrikeAroundKn(figure: Figure) {
+    let { board, opponent } = this.getBoards();
     let possibleKnMoves = this.store.side == 'w'?
       this.getEmptyCellsAroundKn(this.store.getBlack(), this.store.getBlack()['Kn']):
       this.getEmptyCellsAroundKn(this.store.getWhite(), this.store.getWhite()['Kn']);

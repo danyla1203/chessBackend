@@ -66,7 +66,7 @@ export class Game {
     this.process.checkPossibleShahes();
     this.process.checkFiguresAroundKn(board, opponent);
     this.process.setPossibleShahes(figure, cell);
-    this.process.setFiguresAroundKn(board, opponent, figure);
+    this.process.setFiguresStrikeAroundKn(figure);
 
     const shah: null|ShahData = this.process.setShah(figure);
     const mate: null|MateData = this.process.setMate(figure, cell);
