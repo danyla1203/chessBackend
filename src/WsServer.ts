@@ -55,6 +55,7 @@ export class WsServer {
     }
     conn.sendUTF(JSON.stringify(data));
   }
+
   private parseRequest(message: ws.Message): any {
     if (message.type == 'utf8' ) {
       try {
@@ -73,7 +74,12 @@ export class WsServer {
 
       const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
       if (game) {
-        const payload: any = {board: game.actualState(), side: null} 
+        let state = game.actualState();
+        let boards = {
+          white: Object.fromEntries(state.white),
+          black: Object.fromEntries(state.black)
+        }
+        const payload: any = {board: boards, side: null} 
         if (game.couple.length == 1) {
           payload.side = 'w';
           this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
@@ -97,7 +103,12 @@ export class WsServer {
             }
             game.couple.map((player: Player) => {
               if (result) {
-                this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, game.actualState());
+                let actState = game.actualState();
+                let boards = {
+                  white: Object.fromEntries(actState.white),
+                  black: Object.fromEntries(actState.black)
+                }
+                this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, boards);
                 if (result.strikedData) {
                   this.sendMessage(player.conn, ResponseTypes.STRIKE, result.strikedData);
                 }
