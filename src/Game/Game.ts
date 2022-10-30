@@ -35,13 +35,13 @@ export class Game {
     });
   }
   constructor(path: string, initiatorConn: ws.connection, id: string) {
-    this.couple = [{ conn: initiatorConn, side: 'w', id: id }];
+    this.couple = [ { conn: initiatorConn, side: 'w', id: id } ];
     this.path = path;
     this.process = new GameProccess();
     this.isActive = false;
   }
   public addPlayer(conn: ws.connection, id: string): void {
-    this.couple.push({ side: 'b', conn: conn, id: id});
+    this.couple.push({ side: 'b', conn: conn, id: id });
   }
   public start(): void {
     this.isActive = true;
@@ -75,7 +75,7 @@ export class Game {
       mate: mate,
       shah: shah, 
       strikedData: striked 
-    }
+    };
   } 
   public actualState(): FiguresState {
     return this.process.state();

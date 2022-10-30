@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "./output/",
     "noImplicitAny": true,
     "module": "commonjs",
     "target": "es2017",

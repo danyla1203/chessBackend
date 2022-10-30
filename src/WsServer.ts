@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import { randomBytes } from 'crypto';
-import { CompletedMove, Game, Player, TurnData } from './Game/Game';
+import { CompletedMove, Game, Player } from './Game/Game';
 
 enum ResponseTypes {
   INIT_GAME = 'INIT_GAME',
@@ -45,14 +45,14 @@ export class WsServer {
   }
 
   private sendErrorMessage(conn: ws.connection, errType: ErrorTypes, errMessage: string) {
-    this.sendMessage(conn, errType, {errMessage: errMessage});
+    this.sendMessage(conn, errType, { errMessage: errMessage });
   }
 
   private sendMessage(conn: ws.connection, type: ResponseTypes|ErrorTypes, payload: any) {
     const data: Response = {
       type: type,
       payload: payload
-    }
+    };
     conn.sendUTF(JSON.stringify(data));
   }
 
@@ -78,8 +78,8 @@ export class WsServer {
         let boards = {
           white: Object.fromEntries(state.white),
           black: Object.fromEntries(state.black)
-        }
-        const payload: any = {board: boards, side: null} 
+        };
+        const payload: any = { board: boards, side: null }; 
         if (game.couple.length == 1) {
           payload.side = 'w';
           this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
@@ -99,7 +99,7 @@ export class WsServer {
             const result: null|CompletedMove = game.makeTurn(req);
             if (!result) {
               this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Bad request');
-              return
+              return;
             }
             game.couple.map((player: Player) => {
               if (result) {
@@ -107,7 +107,7 @@ export class WsServer {
                 let boards = {
                   white: Object.fromEntries(actState.white),
                   black: Object.fromEntries(actState.black)
-                }
+                };
                 this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, boards);
                 if (result.strikedData) {
                   this.sendMessage(player.conn, ResponseTypes.STRIKE, result.strikedData);

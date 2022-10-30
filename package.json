@@ -6,11 +6,14 @@
     "@types/node": "16.11.9"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint": "8.26.0",
     "nodemon": "2.0.15"
   },
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon ./dist/index.js",
+    "dev": "nodemon ./output/index.js",
     "ts": "tsc --watch"
   }
 }
