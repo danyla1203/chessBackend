@@ -87,11 +87,11 @@ export class GameProccess {
     };
   }
   private getCellsAround(cell: Cell): Cell[] {
-    let [ letter, number ] = cell;
-    let [ leftLetter, rightLetter ] = this.findNextLetter(letter);
-    let nextNum = parseInt(number, 10) + 1;
-    let prevNum = parseInt(number, 10) - 1;
-    let result: Cell[] = [
+    const [ letter, number ] = cell;
+    const [ leftLetter, rightLetter ] = this.findNextLetter(letter);
+    const nextNum = parseInt(number, 10) + 1;
+    const prevNum = parseInt(number, 10) - 1;
+    const result: Cell[] = [
       `${letter}${nextNum}`,
       `${letter}${prevNum}`,
       `${rightLetter}${nextNum}`,
@@ -115,7 +115,7 @@ export class GameProccess {
     this.Letters = [ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
   }
   private findNextLetter(letter: string): string[] {
-    let result = [];
+    const result = [];
     for (let i = 0; i < this.Letters.length; i++) {
       if (this.Letters[i] == letter) {
         if (this.Letters[i - 1]) {
@@ -130,10 +130,10 @@ export class GameProccess {
   }
   private checkIsCellEmpty(boards: Boards, cell: string): boolean {
     if (parseInt(cell[1], 10) > 8) return false;
-    for (let [ figure, cell ] of boards.board) {
+    for (const [ figure, cell ] of boards.board) {
       if (boards.board.get(figure) === cell) return false;
     }
-    for (let [ figure, cell ] of boards.opponent) {
+    for (const [ figure, cell ] of boards.opponent) {
       if (boards.opponent.get(figure) === cell) return false;
     }
     return true;
@@ -145,7 +145,7 @@ export class GameProccess {
     return false;
   }
   private canPawnMove(boards: Boards, cells: CellUpdate): boolean {
-    let { newCell, prevCell } = cells;
+    const { newCell, prevCell } = cells;
     let sideToMove;
     if (this.store.side == 'w') {
       sideToMove = 1;
@@ -153,15 +153,15 @@ export class GameProccess {
       sideToMove = -1;
     }
   
-    let [ prevLetter, prevNumber ] = prevCell;
-    let prevNum = parseInt(prevNumber, 10);
-    let nextLetters = this.findNextLetter(prevLetter);
-    let possibleNextNum  = prevNum + sideToMove;
-    let possibleMoves = [];
+    const [ prevLetter, prevNumber ] = prevCell;
+    const prevNum = parseInt(prevNumber, 10);
+    const nextLetters = this.findNextLetter(prevLetter);
+    const possibleNextNum  = prevNum + sideToMove;
+    const possibleMoves = [];
 
-    let possibleNextCell = `${prevLetter}${possibleNextNum}`;
-    let possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
-    let possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
+    const possibleNextCell = `${prevLetter}${possibleNextNum}`;
+    const possibleNextDiagonalCell1 = `${nextLetters[0]}${possibleNextNum}`;
+    const possibleNextDiagonalCell2 = `${nextLetters[1]}${possibleNextNum}`;
 
     if (possibleNextCell == newCell && this.checkIsCellEmpty(boards, newCell)) {
       possibleMoves.push(newCell);
@@ -185,11 +185,11 @@ export class GameProccess {
     return false;
   }
   private canRockMove(boards: Boards, cells: CellUpdate): boolean {
-    let { newCell, prevCell } = cells;
-    let [ prevLetter, num ] = prevCell;
-    let prevNum = parseInt(num, 10);
+    const { newCell, prevCell } = cells;
+    const [ prevLetter, num ] = prevCell;
+    const prevNum = parseInt(num, 10);
     for (let i = prevNum + 1; i < 9; i++) {
-      let cell = `${prevLetter}${i}`;
+      const cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -199,7 +199,7 @@ export class GameProccess {
       }
     }
     for (let i = prevNum - 1; i > 0; i--) {
-      let cell = `${prevLetter}${i}`;
+      const cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -209,9 +209,9 @@ export class GameProccess {
       }
     }
 
-    let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+    const letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
     for (let i = letterIndex + 1; i < this.Letters.length; i++) {
-      let cell = `${this.Letters[i]}${prevNum}`;
+      const cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -221,7 +221,7 @@ export class GameProccess {
       }
     }
     for (let i = letterIndex - 1; i >= 0; i--) {
-      let cell = `${this.Letters[i]}${prevNum}`;
+      const cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -232,14 +232,14 @@ export class GameProccess {
     }
   }
   private canKnightMove(boards: Boards, cells: CellUpdate): boolean {
-    let [ prevLetter, prevNum ] = cells.prevCell;
-    let num = parseInt(prevNum, 10);
-    let nextLetters = this.findNextLetter(prevLetter);
-    let nextLetterRight = this.findNextLetter(nextLetters[1])[1];
+    const [ prevLetter, prevNum ] = cells.prevCell;
+    const num = parseInt(prevNum, 10);
+    const nextLetters = this.findNextLetter(prevLetter);
+    const nextLetterRight = this.findNextLetter(nextLetters[1])[1];
     let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
     nextLetterLeft = nextLetterLeft == prevLetter ? null : nextLetterLeft;
 
-    let possibleCells: Cell[] = [
+    const possibleCells: Cell[] = [
       `${nextLetters[1]}${num + 2}`,
       `${nextLetterRight}${num + 1}`,
       `${nextLetterRight}${num - 1}`,
@@ -256,14 +256,14 @@ export class GameProccess {
     }
   }
   private canBishopMove(boards: Boards, cells: CellUpdate): boolean {
-    let { newCell, prevCell } = cells;
-    let [ prevLetter, num ] = prevCell;
-    let prevNum = parseInt(num, 10);
-    let letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
+    const { newCell, prevCell } = cells;
+    const [ prevLetter, num ] = prevCell;
+    const prevNum = parseInt(num, 10);
+    const letterIndex = this.Letters.findIndex((lett) => lett == prevLetter);
 
     for (let i = letterIndex + 1, nextNum = prevNum + 1; i < this.Letters.length; i++, nextNum++) {
       if (nextNum > 8) break;
-      let cell = `${this.Letters[i]}${nextNum}`;
+      const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -274,7 +274,7 @@ export class GameProccess {
     }
     for (let i = letterIndex - 1, nextNum = prevNum - 1; i >= 0; i--, nextNum--) {
       if (nextNum <= 0) break;
-      let cell = `${this.Letters[i]}${nextNum}`;
+      const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -285,7 +285,7 @@ export class GameProccess {
     }
     for (let i = letterIndex + 1, nextNum = prevNum - 1; i < this.Letters.length; i++, nextNum--) {
       if (nextNum <= 0) break;
-      let cell = `${this.Letters[i]}${nextNum}`;
+      const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -296,7 +296,7 @@ export class GameProccess {
     }
     for (let i = letterIndex - 1, nextNum = prevNum + 1; i >= 0; i--, nextNum++) {
       if (nextNum <= 0) break;
-      let cell = `${this.Letters[i]}${nextNum}`;
+      const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
       } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
@@ -307,11 +307,11 @@ export class GameProccess {
     }
   }
   private canQueenMove(boards: Boards, cells: CellUpdate): boolean {
-    let result = this.canBishopMove(boards, cells);
+    const result = this.canBishopMove(boards, cells);
     return result || this.canRockMove(boards, cells);
   }
   private canKnMove(boards: Boards, cells: CellUpdate): boolean {
-    let possibleMoves = this.getEmptyCellsAroundKn(boards.board, cells.prevCell);
+    const possibleMoves = this.getEmptyCellsAroundKn(boards.board, cells.prevCell);
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == cells.newCell) {
         return true;
@@ -320,7 +320,7 @@ export class GameProccess {
     return false;
   }
   private getEmptyCellsAroundKn(board: Figures, knCell: Cell): Cell[] {
-    let result: Cell[] = [];
+    const result: Cell[] = [];
     this.getCellsAround(knCell).map((cell: Cell) => {
       if (this.checkIsCellEmpty({ board: board, opponent: board }, cell)) {
         result.push(cell);
@@ -329,11 +329,11 @@ export class GameProccess {
     return result;
   }
   public verifyFigureMove(board: Figures, enemyBoard: Figures, figure: Figure, cell: Cell): boolean {
-    let boards: Boards = {
+    const boards: Boards = {
       board: board,
       opponent: enemyBoard
     };
-    let cells: CellUpdate = {
+    const cells: CellUpdate = {
       prevCell: board.get(figure),
       newCell: cell
     };
@@ -352,8 +352,8 @@ export class GameProccess {
     }
   }
   public isStrikeAfterMove(cell: Cell): null|StrikedData {
-    let { opponent } = this.getBoards(); 
-    for (let figure of opponent) {
+    const { opponent } = this.getBoards(); 
+    for (const figure of opponent) {
       if (opponent.get(figure[0]) == cell) {
         return { strikedSide: this.getOpponentSide(), figure: figure[0] };
       }
@@ -366,17 +366,17 @@ export class GameProccess {
     return true;
   }
   public isShahAppearsAfterMove(figure: Figure, cell: Cell): boolean {
-    let possibleShahes = this.store.getPossibleShahes();
-    let { board, opponent } = this.getBoards();
-    let knCell = board.get('Kn');
-    let possibleShahesForSide = possibleShahes[this.store.side];
+    const possibleShahes = this.store.getPossibleShahes();
+    const { board, opponent } = this.getBoards();
+    const knCell = board.get('Kn');
+    const possibleShahesForSide = possibleShahes[this.store.side];
 
-    let strike: null|StrikedData = this.isStrikeAfterMove(cell);
+    const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (possibleShahesForSide.has(strike.figure)) return false;
     }
     board.set(figure, cell);
-    for (let figure of possibleShahesForSide) {
+    for (const figure of possibleShahesForSide) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
       }
@@ -386,10 +386,10 @@ export class GameProccess {
   public isShahRemainsAfterMove(figure: Figure, cell: Cell): boolean {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != this.store.side) return false;
-    let { board, opponent } = this.getBoards();
-    let knCell = board.get('Kn');
+    const { board, opponent } = this.getBoards();
+    const knCell = board.get('Kn');
 
-    let strike: null|StrikedData = this.isStrikeAfterMove(cell);
+    const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
@@ -403,20 +403,20 @@ export class GameProccess {
     this.store.removeShah();
   }
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
-    let enemyKnCell: Cell = this.store.side == 'w' ?
+    const enemyKnCell: Cell = this.store.side == 'w' ?
       this.store.getBlack().get('Kn'):
       this.store.getWhite().get('Km');
-    let opponentBoard: Figures = new Map();
+    const opponentBoard: Figures = new Map();
     opponentBoard.set('Kn', enemyKnCell);
-    let board: Figures = new Map();
+    const board: Figures = new Map();
     board.set(figure, cell);
     if (this.verifyFigureMove(board, opponentBoard, figure, enemyKnCell)) {
       this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
   }
   public setFiguresStrikeAroundKn(figure: Figure) {
-    let { board, opponent } = this.getBoards();
-    let possibleKnMoves = this.store.side == 'w'?
+    const { board, opponent } = this.getBoards();
+    const possibleKnMoves = this.store.side == 'w'?
       this.getEmptyCellsAroundKn(this.store.getBlack(), this.store.getBlack().get('Kn')):
       this.getEmptyCellsAroundKn(this.store.getWhite(), this.store.getWhite().get('Kn'));
     possibleKnMoves.map((cell: Cell) => {
@@ -426,12 +426,12 @@ export class GameProccess {
     });
   }
   public checkFiguresAroundKn() {
-    let figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
-    let { board, opponent } = this.getBoards();
-    let knCell = opponent.get('Kn');
-    let possibleKnMoves = this.getEmptyCellsAroundKn(opponent, knCell);
+    const figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
+    const { board, opponent } = this.getBoards();
+    const knCell = opponent.get('Kn');
+    const possibleKnMoves = this.getEmptyCellsAroundKn(opponent, knCell);
 
-    for (let figure of figures) {
+    for (const figure of figures) {
       let canMove = false;
       for (let j = 0; j < possibleKnMoves.length; j++) {
         if (this.verifyFigureMove(board, opponent, figure, possibleKnMoves[j])) {
@@ -450,9 +450,9 @@ export class GameProccess {
       this.store.getBlack().get('Kn'):
       this.store.getWhite().get('Kn');
     let board: Figures = new Map();
-    let opponent: Figures = new Map();
+    const opponent: Figures = new Map();
     opponent.set('Kn', knCell);
-    for (let figure of figures) {
+    for (const figure of figures) {
       this.store.side == 'b' ?
         board.set(figure, this.store.getWhite().get(figure)):
         board.set(figure, this.store.getBlack().get(figure));
@@ -465,8 +465,8 @@ export class GameProccess {
   }
 
   public setShah(movedFigure: Figure): null|ShahData {
-    let { board, opponent } = this.getBoards();
-    let knCell = opponent.get('Kn');
+    const { board, opponent } = this.getBoards();
+    const knCell = opponent.get('Kn');
     if (this.verifyFigureMove(board, opponent, movedFigure, knCell)) {
       this.store.setShahData(this.getOpponentSide(), movedFigure);
     }
@@ -474,22 +474,22 @@ export class GameProccess {
   }
   public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
-    let opponentSide: 'w'|'b' = this.getOpponentSide();
-    let { board, opponent }: Boards = this.getBoards();
-    let enemyKnCell: Cell = opponent.get('Kn');
+    const opponentSide: 'w'|'b' = this.getOpponentSide();
+    const { board, opponent }: Boards = this.getBoards();
+    const enemyKnCell: Cell = opponent.get('Kn');
     //if opponent can strike figure which set shah return null
-    for (let opFigure in opponent) {
+    for (const opFigure in opponent) {
       if (opFigure == 'Kn') continue;
       if (this.verifyFigureMove(opponent, board, opFigure, cell)) {
         return null;
       }
     }
-    let emptyCells: Cell[] = this.getEmptyCellsAroundKn(opponent, enemyKnCell);
-    let figuresAroundKn: Set<Figure> = this.store.getStrikeAroundKn()[opponentSide];
-    let canKnMoveCells: Cell[] = [];
+    const emptyCells: Cell[] = this.getEmptyCellsAroundKn(opponent, enemyKnCell);
+    const figuresAroundKn: Set<Figure> = this.store.getStrikeAroundKn()[opponentSide];
+    const canKnMoveCells: Cell[] = [];
     for (let i = 0; i < emptyCells.length; i++) {
       let isStrike: boolean = false;
-      for (let figure of figuresAroundKn) {
+      for (const figure of figuresAroundKn) {
         if (this.verifyFigureMove(board, opponent, figure, board.get(figure))) {
           isStrike = true;
           break;
@@ -533,8 +533,8 @@ export class GameProccess {
     return this.store.side;
   }
   public getBoards(): Boards {
-    let side = this.store.side;
-    let state = this.store.state;
+    const side = this.store.side;
+    const state = this.store.state;
     let board, opponent;
     if (side == 'w') { 
       board = state.w; 

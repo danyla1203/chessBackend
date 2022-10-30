@@ -54,7 +54,7 @@ export class Game {
     }).side;
     if (!this.process.isIncomingDataValid(turnSide, figure, cell)) return null;
 
-    let { board, opponent } = this.process.getBoards();
+    const { board, opponent } = this.process.getBoards();
     if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
     if (this.process.isShahRemainsAfterMove(figure, cell)) return null;
     if (this.process.isShahAppearsAfterMove(figure, cell)) return null;

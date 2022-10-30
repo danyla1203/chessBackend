@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import * as http from 'http';
-import { WsServer } from './WsServer';
+import { WsGameServer } from './WsGameServer';
 
 const server = http.createServer(function(req, res) {
   console.log((new Date()) + ' Received request for ' + req.url);
@@ -15,5 +15,5 @@ const wsServer = new ws.server({
   httpServer: server,
 });
 
-const Server = new WsServer(wsServer);
+const Server = new WsGameServer(wsServer);
 Server.run();
