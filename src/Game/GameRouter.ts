@@ -21,6 +21,7 @@ enum ErrorTypes {
 export enum GameTypes {
   START_NEW = 'START_NEW',
   CONNECT_TO_EXISTING_GAME = 'CONNECT_TO_EXISTING_GAME',
+  CONNECT_TO_GAME_AS_SPECTATOR = 'CONNECT_TO_GAME_AS_SPECTATOR',
   MAKE_TURN = 'MAKE_TURN'
 }
 
@@ -133,7 +134,16 @@ export class GameRouter {
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
     this.GameList.handleNewGame(this.games);
   }
+  private connectToGameAsSpectatorRout(user: User, gameId?: string): void {
+    const game: Game|null = this.findGame(gameId);
 
+    if (!game) {
+      this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
+      return;
+    }
+    game.addSpectator(user);
+    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
+  }
   private connectToGameRout(user: User, gameId?: string): void {
     if (this.isUserInGameAlready(user.userId)) {
       this.sendErrorMessage(user.conn, ErrorTypes.USER_ALREADY_IN_GAME, 'User in another game');
@@ -142,7 +152,10 @@ export class GameRouter {
 
     const game: Game|null = this.findGame(gameId);
 
-    if (!game) this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
+    if (!game) {
+      this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
+      return;
+    }
     game.addPlayer(user);
     game.start();
 
@@ -192,6 +205,8 @@ export class GameRouter {
       break;
     case GameTypes.MAKE_TURN:
       this.makeTurnRout(user, request.body);
+    case GameTypes.CONNECT_TO_EXISTING_GAME:
+      this.connectToGameAsSpectatorRout(user, request.body);
     }
   }
 }
