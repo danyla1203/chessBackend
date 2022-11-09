@@ -43,7 +43,6 @@ export class WsServer {
     this.ws = ws;
     this.users = [];
     this.GameList = new GameList((games: GameData[]) => {
-      console.log(games);
       for (const user of this.users) {
         this.sendMessage(user.conn, ResponseTypes.GameList, games);
       }
@@ -79,7 +78,6 @@ export class WsServer {
   
   public run() {
     this.ws.on('request', (req: ws.request) => {
-      console.log('connect');
       const newConn: ws.connection = req.accept('echo-protocol', req.origin);
       const userId: string = makeId();
 

@@ -19,7 +19,6 @@ export class GameList {
   }
   public sendGameListToConnectedUser(user: User, games: Game[]) {
     const gameDatas: GameData[] = games.map((game: Game) => game.gameData());
-    console.log(gameDatas);
     this.sendMessage(user.conn, ResponseTypes.GameList, gameDatas);
   }
 }
