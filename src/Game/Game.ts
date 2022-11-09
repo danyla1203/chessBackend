@@ -17,6 +17,16 @@ export type CompletedMove = {
   shah?: null|ShahData;
   strikedData?: null|StrikedData;
 }
+
+type PlayerData = {
+  id: string
+}
+export type GameData = {
+  id: string,
+  spectators: number,
+  players: PlayerData[],
+  isActive: boolean;
+}
 export class Game {
   id: string;
   spectators: { [k: string]: Spectator };
@@ -35,6 +45,18 @@ export class Game {
     this.spectators = {};
     this.process = new GameProccess();
     this.isActive = false;
+  }
+  public gameData(): GameData {
+    const playersData = [];
+    for (const userId in this.players) {
+      playersData.push({ id: userId });
+    }
+    return {
+      id: this.id,
+      spectators: Object.values(this.spectators).length,
+      players: playersData,
+      isActive: this.isActive
+    };
   }
   public addPlayer(user: User): void {
     this.players[user.userId] = {

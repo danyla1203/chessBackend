@@ -2,6 +2,7 @@ import * as ws from 'websocket';
 import { CompletedMove, Game } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
+import { GameList } from '../GameList/GameList';
 
 enum GameResponseTypes {
   INIT_GAME = 'INIT_GAME',
@@ -53,16 +54,19 @@ export type GameRequest = Request & {
 
 export class GameRouter {
   games: Game[];
+  GameList: GameList;
   sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void;
   sendErrorMessage: (conn: ws.connection, errType: ErrorTypes, errMessage: string) => void;
 
   constructor(
+    GameList: GameList,
     sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void,
     sendError: (conn: ws.connection, errType: ErrorTypes, errMessage: string) => void
   ) {
     this.sendMessage = sendMessage;
     this.sendErrorMessage = sendError;
     this.games = [];
+    this.GameList = GameList;
   }
 
   private findGame(gameId: string): Game|null {
@@ -127,6 +131,7 @@ export class GameRouter {
     this.games.push(game);
 
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
+    this.GameList.handleNewGame(this.games);
   }
 
   private connectToGameRout(user: User, gameId?: string): void {

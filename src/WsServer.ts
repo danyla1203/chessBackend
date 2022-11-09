@@ -1,5 +1,7 @@
 import * as ws from 'websocket';
+import { GameData } from './Game/Game';
 import { GameRequest, GameRouter } from './Game/GameRouter';
+import { GameList } from './GameList/GameList';
 import { makeId } from './tools/createUniqueId';
 
 enum ErrorTypes {
@@ -17,7 +19,8 @@ export enum RequestTypes {
 }
 export enum ResponseTypes {
   Game = 'Game',
-  GameChat = 'GameChat'
+  GameChat = 'GameChat',
+  GameList = 'GameList'
 }
 
 export type User = {
@@ -34,11 +37,19 @@ export class WsServer {
   ws: ws.server;
   users: User[];
   GameRouter: GameRouter;
+  GameList: GameList;
 
   constructor(ws: ws.server) {
     this.ws = ws;
     this.users = [];
-    this.GameRouter = new GameRouter(this.sendMessage, this.sendErrorMessage);
+    this.GameList = new GameList((games: GameData[]) => {
+      console.log(games);
+      for (const user of this.users) {
+        this.sendMessage(user.conn, ResponseTypes.GameList, games);
+      }
+    }, this.sendMessage);
+    this.GameRouter = new GameRouter(this.GameList, this.sendMessage, this.sendErrorMessage);
+    
   }
 
   private sendErrorMessage(conn: ws.connection, errType: ErrorTypes, errMessage: string): void {
@@ -75,6 +86,7 @@ export class WsServer {
       const user: User = { conn: newConn, userId };
       this.users.push(user);
       newConn.sendUTF('connected');
+      this.GameList.sendGameListToConnectedUser(user, this.GameRouter.games);
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
         if (!parsedMessage || !this.isMessageStructValid(parsedMessage)) {
