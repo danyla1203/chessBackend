@@ -1,57 +1,60 @@
 import * as ws from 'websocket';
-import { Cell, Figure, FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
+import { makeId } from '../tools/createUniqueId';
+import { User } from '../WsServer';
+import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
+import { TurnData } from './GameRouter';
 
-export type TurnData = {
-  playerId: string;
-  figure: Figure;
-  cell: Cell;
-}
 export type Player = {
-  id: string;
   conn: ws.connection;
   side: 'w' | 'b';
 }
+export type Spectator = {
+  conn: ws.connection
+}
+
 export type CompletedMove = {
   mate?: null|MateData;
   shah?: null|ShahData;
   strikedData?: null|StrikedData;
 }
 export class Game {
-  couple: Player[];
-  path: string;
+  id: string;
+  spectators: { [k: string]: Spectator };
+  players: { [k: string]: Player };
   process: GameProccess;
   isActive: boolean;
-  static isNewGame(path: string, games: Game[]): boolean {
-    for (let i = 0; i < games.length; i++) {
-      if (games[i].path == path) return false;
-    }
-    return true;
-  }
-  static findGame(path: string, playerId: string, games: Game[]): Game|undefined {
-    return games.find((game) => {
-      return game.path == path &&
-             game.couple[0].id !== playerId &&
-             game.couple.length < 2;
-    });
-  }
-  constructor(path: string, initiatorConn: ws.connection, id: string) {
-    this.couple = [ { conn: initiatorConn, side: 'w', id: id } ];
-    this.path = path;
+
+  constructor(user: User) {
+    this.id = makeId();
+    this.players = {
+      [user.userId]: {
+        conn: user.conn,
+        side: 'w'
+      }
+    };
+    this.spectators = {};
     this.process = new GameProccess();
     this.isActive = false;
   }
-  public addPlayer(conn: ws.connection, id: string): void {
-    this.couple.push({ side: 'b', conn: conn, id: id });
+  public addPlayer(user: User): void {
+    this.players[user.userId] = {
+      conn: user.conn,
+      side: 'w'
+    };
+  }
+  public addSpectator(user: User): void {
+    this.spectators[user.userId] = {
+      conn: user.conn,
+    };
   }
   public start(): void {
     this.isActive = true;
     console.log('Game Start!');
   }
-  public makeTurn(turn: TurnData): null|CompletedMove {
+
+  public makeTurn(playerId: string, turn: TurnData): null|CompletedMove {
     const { figure, cell } = turn;
-    const turnSide: 'w'|'b' = this.couple.find((player) => {
-      return player.id == turn.playerId;
-    }).side;
+    const turnSide: 'w'|'b' = this.players[playerId].side;
     if (!this.process.isIncomingDataValid(turnSide, figure, cell)) return null;
 
     const { board, opponent } = this.process.getBoards();
@@ -80,4 +83,5 @@ export class Game {
   public actualState(): FiguresState {
     return this.process.state();
   }
+  
 }
