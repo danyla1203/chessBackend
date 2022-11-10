@@ -128,7 +128,6 @@ export class GameRouter {
     }
 
     const game = new Game(user);
-    game.start();
     this.games.push(game);
 
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
@@ -205,8 +204,10 @@ export class GameRouter {
       break;
     case GameTypes.MAKE_TURN:
       this.makeTurnRout(user, request.body);
+      break;
     case GameTypes.CONNECT_TO_EXISTING_GAME:
       this.connectToGameAsSpectatorRout(user, request.body);
+      break;
     }
   }
 }
