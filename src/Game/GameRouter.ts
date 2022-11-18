@@ -1,11 +1,12 @@
 import * as ws from 'websocket';
-import { CompletedMove, Game } from './Game';
+import { CompletedMove, Game, Player } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from '../GameList/GameList';
 
 enum GameResponseTypes {
   INIT_GAME = 'INIT_GAME',
+  GAME_START = 'GAME_START',
   UPDATE_STATE = 'UPDATE_STATE',
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
@@ -87,7 +88,7 @@ export class GameRouter {
         white: Object.fromEntries(actualState.white),
         black: Object.fromEntries(actualState.black)
       };
-      this.sendGameMessage(game.players[player].conn, GameResponseTypes.UPDATE_STATE, boards);
+      this.sendGameMessage(game.players[player].conn, GameResponseTypes.UPDATE_STATE, { board: boards });
       if (strikedData) {
         this.sendGameMessage(game.players[player].conn, GameResponseTypes.STRIKE, strikedData);
       }
@@ -101,14 +102,14 @@ export class GameRouter {
     //TODO: send move result to spectators
   }
   
-  private initGameData(game: Game) {
+  private initGameData(userId: string, game: Game) {
     const { white, black } = game.actualState();
     const boards = {
       white: Object.fromEntries(white),
       black: Object.fromEntries(black)
     };
 
-    const payload: any = { board: boards, gameId: game.id, side: Object.values(game.players)[0].side }; 
+    const payload: any = { board: boards, gameId: game.id, side: game.players[userId].side }; 
     return payload;
   }
 
@@ -130,7 +131,7 @@ export class GameRouter {
     const game = new Game(user);
     this.games.push(game);
 
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
+    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
     this.GameList.handleNewGame(this.games);
   }
   private connectToGameAsSpectatorRout(user: User, gameId?: string): void {
@@ -141,7 +142,7 @@ export class GameRouter {
       return;
     }
     game.addSpectator(user);
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
+    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
   }
   private connectToGameRout(user: User, gameId?: string): void {
     if (this.isUserInGameAlready(user.userId)) {
@@ -158,7 +159,10 @@ export class GameRouter {
     game.addPlayer(user);
     game.start();
 
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(game));
+    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
+    Object.values(game.players).map((player: Player) => {
+      this.sendGameMessage(player.conn, GameResponseTypes.GAME_START, {});
+    });
   } 
 
   private isMakeTurnRequestValid(request: MakeTurnBody): boolean {
@@ -194,13 +198,13 @@ export class GameRouter {
       this.sendErrorMessage(user.conn, ErrorTypes.BAD_REQUEST, 'No type for body');
       return;
     }
-
+    
     switch (request.body.type) {
     case GameTypes.START_NEW:
       this.startNewGameRout(user);
       break;
     case GameTypes.CONNECT_TO_EXISTING_GAME:
-      this.connectToGameRout(user, request.body.payload.gameId);
+      this.connectToGameRout(user, request.body.body.gameId);
       break;
     case GameTypes.MAKE_TURN:
       this.makeTurnRout(user, request.body);
