@@ -61,7 +61,7 @@ export class Game {
   public addPlayer(user: User): void {
     this.players[user.userId] = {
       conn: user.conn,
-      side: 'w'
+      side: 'b'
     };
   }
   public addSpectator(user: User): void {
