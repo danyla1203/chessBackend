@@ -20,11 +20,13 @@ export enum RequestTypes {
 export enum ResponseTypes {
   Game = 'Game',
   GameChat = 'GameChat',
-  GameList = 'GameList'
+  GameList = 'GameList',
+  User = 'User',
 }
 
 export type User = {
-  userId: string;
+  userId: string,
+  name: string,
   conn: ws.connection
 }
 
@@ -80,10 +82,11 @@ export class WsServer {
     this.ws.on('request', (req: ws.request) => {
       const newConn: ws.connection = req.accept('echo-protocol', req.origin);
       const userId: string = makeId();
-
-      const user: User = { conn: newConn, userId };
+      
+      const user: User = { conn: newConn, name: 'Anonymous', userId };
       this.users.push(user);
       newConn.sendUTF('connected');
+      this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
       this.GameList.sendGameListToConnectedUser(user, this.GameRouter.games);
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
