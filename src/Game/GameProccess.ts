@@ -128,14 +128,15 @@ export class GameProccess {
     }
     return result;
   }
-  private checkIsCellEmpty(boards: Boards, cell: string): boolean {
-    if (parseInt(cell[1], 10) > 8) return false;
-    for (const [ figure, cell ] of boards.board) {
-      if (boards.board.get(figure) === cell) return false;
+  private checkIsCellEmpty(boards: Boards, newCell: string): boolean {
+    if (parseInt(newCell[1], 10) > 8) return false;
+    for (const [ figure ] of boards.board) {
+      if (boards.board.get(figure) === newCell) return false;
     }
-    for (const [ figure, cell ] of boards.opponent) {
-      if (boards.opponent.get(figure) === cell) return false;
+    for (const [ figure ] of boards.opponent) {
+      if (boards.opponent.get(figure) === newCell) return false;
     }
+
     return true;
   }
   private isEnemyInCell(board: Figures): boolean {
@@ -177,6 +178,7 @@ export class GameProccess {
     } else if (this.store.side == 'b' && prevNum == 7) {
       possibleMoves.push(`${prevLetter}${prevNum - 2}`);
     }
+    
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == newCell) {
         return true;
@@ -405,11 +407,12 @@ export class GameProccess {
   public setPossibleShahes(figure: Figure, cell: Cell): void { 
     const enemyKnCell: Cell = this.store.side == 'w' ?
       this.store.getBlack().get('Kn'):
-      this.store.getWhite().get('Km');
+      this.store.getWhite().get('Kn');
     const opponentBoard: Figures = new Map();
     opponentBoard.set('Kn', enemyKnCell);
     const board: Figures = new Map();
     board.set(figure, cell);
+    
     if (this.verifyFigureMove(board, opponentBoard, figure, enemyKnCell)) {
       this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
