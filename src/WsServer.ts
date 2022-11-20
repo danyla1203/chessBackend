@@ -80,7 +80,14 @@ export class WsServer {
   
   public run() {
     this.ws.on('request', (req: ws.request) => {
-      const newConn: ws.connection = req.accept('echo-protocol', req.origin);
+      let newConn: ws.connection;
+      try {
+        newConn = req.accept('echo-protocol', req.origin);
+      } catch (e) {
+        console.log(e);
+        return;
+      }
+    
       const userId: string = makeId();
       
       const user: User = { conn: newConn, name: 'Anonymous', userId };
