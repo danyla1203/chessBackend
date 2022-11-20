@@ -178,7 +178,7 @@ export class GameProccess {
     } else if (this.store.side == 'b' && prevNum == 7) {
       possibleMoves.push(`${prevLetter}${prevNum - 2}`);
     }
-    
+
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == newCell) {
         return true;
@@ -395,10 +395,14 @@ export class GameProccess {
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
-    board.set(figure, cell);
+    if (figure !== 'Kn') board.set(figure, cell);
+    
+    this.store.turnSide = this.getOpponentSide();
     if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
+      this.store.turnSide = this.getOpponentSide();
       return true;
     }
+    this.store.turnSide = this.getOpponentSide();
     return false;
   }
   public removeShah(): void {
