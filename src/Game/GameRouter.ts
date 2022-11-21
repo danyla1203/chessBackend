@@ -3,6 +3,10 @@ import { CompletedMove, Game, Player } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from '../GameList/GameList';
+import { InactiveGameError } from '../errors/Game/InactiveGame';
+import { GameNotFound } from '../errors/Game/NotFound';
+import { UserInAnotherGame } from '../errors/Game/UserInAnotherGame';
+import { BadRequestError } from '../errors/BadRequest';
 
 enum GameResponseTypes {
   INIT_GAME = 'INIT_GAME',
@@ -11,12 +15,6 @@ enum GameResponseTypes {
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
   MATE = 'MATE'
-}
-enum ErrorTypes {
-  BAD_REQUEST = 'BAD_REQUEST',
-  GAME_NOT_FOUND = 'GAME_NOT_FOUND',
-  GAME_IS_INACTIVE = 'GAME_IS_INACTIVE',
-  USER_ALREADY_IN_GAME = 'USER_ALREADY_IN_GAME'
 }
 
 export enum GameTypes {
@@ -58,15 +56,13 @@ export class GameRouter {
   games: Game[];
   GameList: GameList;
   sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void;
-  sendErrorMessage: (conn: ws.connection, errType: ErrorTypes, errMessage: string) => void;
+
 
   constructor(
     GameList: GameList,
     sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void,
-    sendError: (conn: ws.connection, errType: ErrorTypes, errMessage: string) => void
   ) {
     this.sendMessage = sendMessage;
-    this.sendErrorMessage = sendError;
     this.games = [];
     this.GameList = GameList;
   }
@@ -123,10 +119,7 @@ export class GameRouter {
   }
 
   private startNewGameRout(user: User): void {
-    if (this.isUserInGameAlready(user.userId)) {
-      this.sendErrorMessage(user.conn, ErrorTypes.USER_ALREADY_IN_GAME, 'User in another game');
-      return;
-    }
+    if (this.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
 
     const game = new Game(user);
     this.games.push(game);
@@ -137,25 +130,16 @@ export class GameRouter {
   private connectToGameAsSpectatorRout(user: User, gameId?: string): void {
     const game: Game|null = this.findGame(gameId);
 
-    if (!game) {
-      this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
-      return;
-    }
+    if (!game) throw new GameNotFound();
     game.addSpectator(user);
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
   }
   private connectToGameRout(user: User, gameId?: string): void {
-    if (this.isUserInGameAlready(user.userId)) {
-      this.sendErrorMessage(user.conn, ErrorTypes.USER_ALREADY_IN_GAME, 'User in another game');
-      return;
-    }
+    if (this.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
 
     const game: Game|null = this.findGame(gameId);
 
-    if (!game) {
-      this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
-      return;
-    }
+    if (!game) throw new GameNotFound();
     game.addPlayer(user);
     game.start();
 
@@ -171,33 +155,17 @@ export class GameRouter {
     return true;
   }
   private makeTurnRout(user: User, moveData: MakeTurnBody): void {
-    if (!this.isMakeTurnRequestValid(moveData)) {
-      this.sendErrorMessage(user.conn, ErrorTypes.BAD_REQUEST, 'Bad request');
-      return;
-    }
+    if (!this.isMakeTurnRequestValid(moveData)) throw new BadRequestError('Bad request');
     const game: Game|null = this.findGame(moveData.gameId);
-    if (!game) {
-      this.sendErrorMessage(user.conn, ErrorTypes.GAME_NOT_FOUND, 'Game not found');
-      return;
-    }
-    if (!game.isActive) {
-      this.sendErrorMessage(user.conn, ErrorTypes.GAME_IS_INACTIVE, 'Game is inactive');
-      return;
-    }
+    if (!game) throw new GameNotFound();
+    if (!game.isActive) throw new InactiveGameError();
     
-    const result: null|CompletedMove = game.makeTurn(user.userId, moveData.body);
-    if (!result) {
-      this.sendErrorMessage(user.conn, ErrorTypes.BAD_REQUEST, 'Bad move');
-      return;
-    }
+    const result: CompletedMove = game.makeTurn(user.userId, moveData.body);
     this.sendTurnResultToUsers(game, result);
   }
 
   public handleMessage(user: User , request: GameRequest): void {
-    if (!request.body.type) {
-      this.sendErrorMessage(user.conn, ErrorTypes.BAD_REQUEST, 'No type for body');
-      return;
-    }
+    if (!request.body.type) throw new BadRequestError('No body type');
     
     switch (request.body.type) {
     case GameTypes.START_NEW:

@@ -1,12 +1,10 @@
 import * as ws from 'websocket';
+import { BaseError } from './errors';
+import { ErrorTypes } from './errors/types';
 import { GameData } from './Game/Game';
 import { GameRequest, GameRouter } from './Game/GameRouter';
 import { GameList } from './GameList/GameList';
 import { makeId } from './tools/createUniqueId';
-
-enum ErrorTypes {
-  BAD_REQUEST = 'BAD_REQUEST',
-}
 
 type Response = {
   type: any,
@@ -49,15 +47,11 @@ export class WsServer {
         this.sendMessage(user.conn, ResponseTypes.GameList, games);
       }
     }, this.sendMessage);
-    this.GameRouter = new GameRouter(this.GameList, this.sendMessage, this.sendErrorMessage);
+    this.GameRouter = new GameRouter(this.GameList, this.sendMessage);
     
   }
 
-  private sendErrorMessage(conn: ws.connection, errType: ErrorTypes, errMessage: string): void {
-    const data: Response = { type: errType, payload: { errMessage } };
-    conn.sendUTF(JSON.stringify(data));
-  }
-  private sendMessage(conn: ws.connection, type: ResponseTypes, payload: any): void {
+  private sendMessage(conn: ws.connection, type: string, payload: any): void {
     const data: Response = { type, payload };
     conn.sendUTF(JSON.stringify(data));
   }
@@ -78,6 +72,14 @@ export class WsServer {
     }
   }
   
+  private handleMessage(user: User, message: Request): void {
+    switch (message.type) {
+    case RequestTypes.Game:
+      this.GameRouter.handleMessage(user, message as GameRequest);
+      break;
+    }
+  }
+
   public run() {
     this.ws.on('request', (req: ws.request) => {
       let newConn: ws.connection;
@@ -98,13 +100,16 @@ export class WsServer {
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
         if (!parsedMessage || !this.isMessageStructValid(parsedMessage)) {
-          this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Message is invalid');
+          this.sendMessage(newConn, ErrorTypes.BAD_REQUEST, 'Message is invalid');
         }
-
-        switch (parsedMessage.type) {
-        case RequestTypes.Game:
-          this.GameRouter.handleMessage(user, parsedMessage as GameRequest);
-          break;
+        try {
+          this.handleMessage(user, parsedMessage);
+        } catch (e: unknown) {
+          if (e instanceof BaseError) {
+            this.sendMessage(newConn, e.type, e.message);
+          } else {
+            this.sendMessage(newConn, 'SERVER_ERR', {});
+          }
         }
       });
     });

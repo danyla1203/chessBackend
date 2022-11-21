@@ -1,4 +1,6 @@
 import * as ws from 'websocket';
+import { BadRequestError } from '../errors/BadRequest';
+import { BadMoveError } from '../errors/Game/BadMove';
 import { makeId } from '../tools/createUniqueId';
 import { User } from '../WsServer';
 import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
@@ -77,12 +79,12 @@ export class Game {
   public makeTurn(playerId: string, turn: TurnData): null|CompletedMove {
     const { figure, cell } = turn;
     const turnSide: 'w'|'b' = this.players[playerId].side;
-    if (!this.process.isIncomingDataValid(turnSide, figure, cell)) return null;
+    if (!this.process.isIncomingDataValid(turnSide, figure, cell)) throw new BadRequestError('Invalid move data');
 
     const { board, opponent } = this.process.getBoards();
-    if (!this.process.verifyFigureMove(board, opponent, figure, cell)) return null;
-    if (this.process.isShahRemainsAfterMove(figure, cell)) return null;
-    if (this.process.isShahAppearsAfterMove(figure, cell)) return null;
+    if (!this.process.verifyFigureMove(board, opponent, figure, cell)) throw new BadMoveError('Can\'t move this figure in cell');
+    if (this.process.isShahRemainsAfterMove(figure, cell)) throw new BadMoveError('Stil shah!');
+    if (this.process.isShahAppearsAfterMove(figure, cell)) throw new BadMoveError('Shah appears after this move');
     this.process.removeShah();
 
     const striked: null|StrikedData = this.process.isStrikeAfterMove(turn.cell);
