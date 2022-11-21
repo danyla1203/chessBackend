@@ -139,9 +139,10 @@ export class GameProccess {
 
     return true;
   }
-  private isEnemyInCell(board: Figures): boolean {
-    for (const [ figure, cell ] of board) {
-      if (board.get(figure) === cell) return true;
+  private isEnemyInCell(cell: Cell): boolean {
+    const { opponent } = this.getBoards();
+    for (let figure in opponent) {
+      if (opponent.get(figure) === cell) return true;
     }
     return false;
   }
@@ -167,10 +168,10 @@ export class GameProccess {
     if (possibleNextCell == newCell && this.checkIsCellEmpty(boards, newCell)) {
       possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell1 == newCell && this.isEnemyInCell(boards.opponent)) {
+    if (possibleNextDiagonalCell1 == newCell && this.isEnemyInCell(newCell)) {
       possibleMoves.push(newCell);
     }
-    if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(boards.opponent)) {
+    if (possibleNextDiagonalCell2 == newCell && this.isEnemyInCell(newCell)) {
       possibleMoves.push(newCell);
     }
     if (this.store.side == 'w' && prevNum == 2) {
@@ -194,7 +195,7 @@ export class GameProccess {
       const cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -204,7 +205,7 @@ export class GameProccess {
       const cell = `${prevLetter}${i}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -216,7 +217,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -226,7 +227,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${prevNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -268,7 +269,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -279,7 +280,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -290,7 +291,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -301,7 +302,7 @@ export class GameProccess {
       const cell = `${this.Letters[i]}${nextNum}`;
       if (cell == newCell) {
         return true;
-      } else if (this.isEnemyInCell(boards.opponent) && cell == newCell) {
+      } else if (this.isEnemyInCell(newCell) && cell == newCell) {
         return true;
       } else if (!this.checkIsCellEmpty(boards, cell)) {
         break;
@@ -478,6 +479,14 @@ export class GameProccess {
       this.store.setShahData(this.getOpponentSide(), movedFigure);
     }
     return this.store.shah;
+  }
+  private canCoverKnWhenShahed(): boolean|null {
+    if (!this.store.shah) return null;
+    const { byFigure } = this.store.shah;
+    const { board, opponent } = this.getBoards();
+    const cell = board.get(byFigure);
+    const knCell = opponent.get('Kn');
+
   }
   public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
