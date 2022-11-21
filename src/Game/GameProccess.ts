@@ -141,7 +141,7 @@ export class GameProccess {
   }
   private isEnemyInCell(cell: Cell): boolean {
     const { opponent } = this.getBoards();
-    for (let figure in opponent) {
+    for (const [ figure ] of opponent) {
       if (opponent.get(figure) === cell) return true;
     }
     return false;
