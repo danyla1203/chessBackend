@@ -485,17 +485,22 @@ export class GameProccess {
     const { byFigure } = this.store.shah;
     const { board, opponent } = this.getBoards();
     const cell = board.get(byFigure);
-    const possibleMoves = this.getPossibleMoves(byFigure, cell);
-
+    const possibleMoves = this.getEmptyCellsBetweenKnAndShahedFigure(opponent.get('Kn'), byFigure, cell);
+    this.setMoveSide();
     for (const [ figure ] of opponent) {
-      for (let moveCell of possibleMoves) {
-        if (this.verifyFigureMove(opponent, board, figure, moveCell)) return true;
+      for (const moveCell of possibleMoves) {
+        if (this.verifyFigureMove(opponent, board, figure, moveCell)) {
+          this.setMoveSide();
+          return true;
+        }
       }
     }
+    this.setMoveSide();
   }
   public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
     if (this.canCoverKnWhenShahed()) return null;
+    console.log('t');
     const opponentSide: 'w'|'b' = this.getOpponentSide();
     const { board, opponent }: Boards = this.getBoards();
     const enemyKnCell: Cell = opponent.get('Kn');
@@ -571,167 +576,67 @@ export class GameProccess {
     this.store.updateBoard(figure, cell);
   }
   
-  private pawnMove(currentCell: Cell): Cell[] {
-    const boards = this.getBoards();
+  private rockMove(knCell: Cell, currentCell: Cell): string[] {
     const [ letter, number ] = [ currentCell[0], currentCell[1] ];
-    const num = parseInt(number);
+    const num = parseInt(number, 10);
+    const knNum = parseInt(knCell[1]);
+    const letterIndex = this.Letters.findIndex((lett) => lett == letter);
+    const knLetterIndex = this.Letters.findIndex((lett) => lett === knCell[0]);
     const possibleMoves: string[] = [];
-    let sideToMove = 0;
-    if (this.store.side == 'w') {
-      sideToMove = 1;
+
+    let indexChange: number = 0;
+    if (knLetterIndex > letterIndex) {
+      indexChange = 1;
+    } else if (knLetterIndex < letterIndex) {
+      indexChange = -1;
+    }
+    let numChange: number = 0;
+    if (knNum > num) {
+      numChange = 1;
+    } else if (knNum < num) {
+      numChange = -1;
+    }
+    
+    for (let i = letterIndex + indexChange, nextNum = num + numChange; i != knLetterIndex && nextNum != knNum ; i += indexChange, nextNum += numChange) {
+      possibleMoves.push(`${this.Letters[i]}${nextNum}`);
+    }
+    return possibleMoves;
+  }
+  private bishopMove(knCell: Cell, figureCell: Cell): Cell[] {
+    const [ letter, number ] = [ figureCell[0], figureCell[1] ];
+    const num = parseInt(number, 10);
+    const knNum = parseInt(knCell[1]);
+    const letterIndex = this.Letters.findIndex((lett) => lett == letter);
+    const knLetterIndex = this.Letters.findIndex((lett) => lett === knCell[0]);
+    const possibleMoves: string[] = [];
+
+    let indexChange: number;
+    if (knLetterIndex > letterIndex) {
+      indexChange = 1;
     } else {
-      sideToMove = -1;
+      indexChange = -1;
     }
-    if (this.checkIsCellEmpty(boards, `${letter}${num + sideToMove}`)) {
-      possibleMoves.push(`${letter}${num + sideToMove}`);
-    } 
-    const nextLetters = this.findNextLetter(letter);
-    nextLetters[0] = `${nextLetters[0]}${num + sideToMove}`;
-    nextLetters[1] = `${nextLetters[1]}${num + sideToMove}`;
-    if (this.isEnemyInCell(nextLetters[0])) {
-      possibleMoves.push(nextLetters[0]);
+    let numChange: number;
+    if (knNum > num) {
+      numChange = 1;
+    } else {
+      numChange = -1;
     }
-    if (this.isEnemyInCell(nextLetters[1])) {
-      possibleMoves.push(nextLetters[1]);
-    }
-    if (this.store.side == 'w' && num == 2) {
-      possibleMoves.push(`${letter}${num + 2}`);
-    } else if (this.store.side == 'b' && num == 7) {
-      possibleMoves.push(`${letter}${num - 2}`);
+    
+    for (let i = letterIndex + indexChange, nextNum = num + numChange; i != knLetterIndex && nextNum != knNum ; i += indexChange, nextNum += numChange) {
+      possibleMoves.push(`${this.Letters[i]}${nextNum}`);
     }
     return possibleMoves;
   }
-  private knighMove(currentCell: Cell): Cell[] {
-    const [ letter, number ] = [ currentCell[0], currentCell[1] ];
-    const num = parseInt(number, 10);
-    const possibleMoves: string[] = [];
-    const nextLetters = this.findNextLetter(letter);
-    const nextLetterRight = this.findNextLetter(nextLetters[1])[1];
-    let nextLetterLeft = this.findNextLetter(nextLetters[0])[0];
-    nextLetterLeft = nextLetterLeft == letter ? null : nextLetterLeft;
-
-    const cells: Cell[] = [
-      `${nextLetters[1]}${num + 2}`,
-      `${nextLetterRight}${num + 1}`,
-      `${nextLetterRight}${num - 1}`,
-      `${nextLetters[1]}${num - 2}`,
-      `${nextLetters[0]}${num - 2}`,
-      `${nextLetterLeft}${num - 1}`,
-      `${nextLetterLeft}${num + 1}`,
-      `${nextLetters[0]}${num + 2}`
-    ];
-    cells.map((cell: Cell) => {
-      if (cell.length != 2 || cell[1] == '0') return;
-      if (this.isEnemyInCell(cell)) possibleMoves.push(cell);
-      else if (this.checkIsCellEmpty(this.getBoards(), cell)) possibleMoves.push(cell);
-    });
-    return possibleMoves;
-  }
-  private rockMove(currentCell: Cell): string[] {
-    const boards = this.getBoards();
-    const [ letter, number ] = [ currentCell[0], currentCell[1] ];
-    const num = parseInt(number, 10);
-    const possibleMoves: string[] = [];
-
-    for (let i = num + 1; i < 9; i++) {
-      if (this.isEnemyInCell(`${letter}${i}`)) {
-        possibleMoves.push(`${letter}${i}`);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, `${letter}${i}`)) break;
-      else possibleMoves.push(`${letter}${i}`);
-
-    }
-    for (let i = num - 1; i > 0; i--) {
-      if (this.isEnemyInCell(`${letter}${i}`)) {
-        possibleMoves.push(`${letter}${i}`);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, `${letter}${i}`)) break;
-      else possibleMoves.push(`${letter}${i}`);
-    }
-
-    const letterIndex = this.Letters.findIndex((lett) => lett == letter);
-    for (let i = letterIndex + 1; i < this.Letters.length; i++) {
-      if (this.isEnemyInCell(`${this.Letters[i]}${num}`)) {
-        possibleMoves.push(`${this.Letters[i]}${num}`);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, `${this.Letters[i]}${num}`)) break;
-      else possibleMoves.push(`${this.Letters[i]}${num}`);
-    }
-    for (let i = letterIndex - 1; i >= 0; i--) {
-      if (this.isEnemyInCell(`${this.Letters[i]}${num}`)) {
-        possibleMoves.push(`${this.Letters[i]}${num}`);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, `${this.Letters[i]}${num}`)) break;
-      else possibleMoves.push(`${this.Letters[i]}${num}`);
-    }
-    return possibleMoves;
-  }
-  private bishopMove(currentCell: Cell): Cell[] {
-    const [ letter, number ] = [ currentCell[0], currentCell[1] ];
-    const num = parseInt(number, 10);
-    const letterIndex = this.Letters.findIndex((lett) => lett == letter);
-    const possibleMoves: string[] = [];
-    const boards = this.getBoards();
-
-    for (let i = letterIndex + 1, nextNum = num + 1; i < this.Letters.length; i++, nextNum++) {
-      if (nextNum > 8) break;
-      const cell = `${this.Letters[i]}${nextNum}`;
-      if (this.isEnemyInCell(cell)) {
-        possibleMoves.push(cell);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, cell)) break;
-      else possibleMoves.push(cell);
-    }
-    for (let i = letterIndex - 1, nextNum = num - 1; i >= 0; i--, nextNum--) {
-      if (nextNum <= 0) break;
-      const cell = `${this.Letters[i]}${nextNum}`;
-      if (this.isEnemyInCell(cell)) {
-        possibleMoves.push(cell);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, cell)) break;
-      else possibleMoves.push(cell);
-    }
-    for (let i = letterIndex + 1, nextNum = num - 1; i < this.Letters.length; i++, nextNum--) {
-      if (nextNum <= 0) break;
-      const cell = `${this.Letters[i]}${nextNum}`;
-      if (this.isEnemyInCell(cell)) {
-        possibleMoves.push(cell);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, cell)) break;
-      else possibleMoves.push(cell);
-    }
-    for (let i = letterIndex - 1, nextNum = num + 1; i >= 0; i--, nextNum++) {
-      if (nextNum <= 0) break;
-      const cell = `${this.Letters[i]}${nextNum}`;
-      if (this.isEnemyInCell(cell)) {
-        possibleMoves.push(cell);
-        break;
-      } else if (!this.checkIsCellEmpty(boards, cell)) break;
-      else possibleMoves.push(cell);
-    }
-    return possibleMoves;
-  }
-  private queenMove(currentCell: Cell): Cell[] {
-    return [ ...this.rockMove(currentCell), ...this.bishopMove(currentCell) ];
+  private queenMove(knCell: Cell, currentCell: Cell): Cell[] {
+    return [ ...this.rockMove(knCell, currentCell), ...this.bishopMove(knCell, currentCell) ];
   }
   
-  private knMove(currentCell: Cell): Cell[] {
-    const cells = this.getCellsAround(currentCell);
-    for (let i = 0; i < cells.length; i++) {
-      if (!this.checkIsCellEmpty(this.getBoards(), cells[i]) && !this.isEnemyInCell(cells[i])) {
-        cells.splice(i, 1);
-        i--;
-      }
-    }
-    return cells;
-  }
-  public getPossibleMoves(figure: Figure, currentCell: Cell): Cell[] {
-    if (/pawn/.test(figure)) return this.pawnMove(currentCell);
-    if (/R/.test(figure)) return this.rockMove(currentCell);
-    if (/Kn/.test(figure)) return this.knMove(currentCell);
-    if (/K/.test(figure)) return this.knighMove(currentCell);
-    if (/B/.test(figure)) return this.bishopMove(currentCell);
-    if (/Q/.test(figure)) return this.queenMove(currentCell);
+  
+  public getEmptyCellsBetweenKnAndShahedFigure(knCell: Cell, figure: Figure, figureCell: Cell): Cell[] {
+    if (/R/.test(figure)) return this.rockMove(knCell, figureCell);
+    if (/B/.test(figure)) return this.bishopMove(knCell, figureCell);
+    if (/Q/.test(figure)) return this.queenMove(knCell, figureCell);
 
     return [];
   }

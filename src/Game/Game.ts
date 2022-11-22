@@ -100,8 +100,8 @@ export class Game {
     this.process.setMoveSide();
     return { 
       mate: mate,
-      shah: shah, 
-      strikedData: striked 
+      shah: shah,
+      strikedData: striked
     };
   } 
   public actualState(): FiguresState {
