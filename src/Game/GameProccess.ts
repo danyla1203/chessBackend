@@ -371,14 +371,17 @@ export class GameProccess {
   public isShahAppearsAfterMove(figure: Figure, cell: Cell): boolean {
     const possibleShahes = this.store.getPossibleShahes();
     const { board, opponent } = this.getBoards();
-    const knCell = board.get('Kn');
+    let knCell = board.get('Kn');
     const possibleShahesForSide = possibleShahes[this.store.side];
 
     const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (possibleShahesForSide.has(strike.figure)) return false;
     }
+
     board.set(figure, cell);
+    if (figure === 'Kn') knCell = cell;
+
     for (const figure of possibleShahesForSide) {
       if (this.verifyFigureMove(opponent, board, figure, knCell)) {
         return true;
@@ -390,13 +393,14 @@ export class GameProccess {
     if (!this.store.shah) return false;
     if (this.store.shah.shachedSide != this.store.side) return false;
     const { board, opponent } = this.getBoards();
-    const knCell = board.get('Kn');
+    let knCell = board.get('Kn');
 
     const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
-    if (figure !== 'Kn') board.set(figure, cell);
+    board.set(figure, cell);
+    if (figure === 'Kn') knCell = cell;
     
     this.store.turnSide = this.getOpponentSide();
     if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
@@ -506,7 +510,6 @@ export class GameProccess {
     const enemyKnCell: Cell = opponent.get('Kn');
     //if opponent can strike figure which set shah return null
     for (const opFigure in opponent) {
-      if (opFigure == 'Kn') continue;
       if (this.verifyFigureMove(opponent, board, opFigure, cell)) {
         return null;
       }
@@ -634,7 +637,7 @@ export class GameProccess {
   
   
   public getEmptyCellsBetweenKnAndShahedFigure(knCell: Cell, figure: Figure, figureCell: Cell): Cell[] {
-    if (/R/.test(figure)) return this.rockMove(knCell, figureCell);
+    if (/R/.test(figure)) return this.rockMove(knCell,figureCell);
     if (/B/.test(figure)) return this.bishopMove(knCell, figureCell);
     if (/Q/.test(figure)) return this.queenMove(knCell, figureCell);
 
