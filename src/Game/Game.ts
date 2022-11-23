@@ -90,10 +90,9 @@ export class Game {
     const striked: null|StrikedData = this.process.isStrikeAfterMove(turn.cell);
     if (striked) this.process.removeFigure(this.process.getOpponentSide(), striked.figure);
     this.process.updateBoard(figure, cell);
-    this.process.checkPossibleShahes();
-    this.process.checkFiguresAroundKn();
-    this.process.setPossibleShahes(figure, cell);
-    this.process.setFiguresStrikeAroundKn(figure);
+    
+    this.process.setPossibleShah(figure, cell);
+    this.process.setFigureStrikeAroundKn(figure, cell);
 
     const shah: null|ShahData = this.process.setShah(figure);
     const mate: null|MateData = this.process.setMate(figure, cell);

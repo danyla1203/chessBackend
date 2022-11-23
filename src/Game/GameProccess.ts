@@ -314,7 +314,7 @@ export class GameProccess {
     return result || this.canRockMove(boards, cells);
   }
   private canKnMove(boards: Boards, cells: CellUpdate): boolean {
-    const possibleMoves = this.getEmptyCellsAroundKn(boards.board, cells.prevCell);
+    const possibleMoves = this.getEmptyCellsAroundKn(boards, cells.prevCell);
     for (let i = 0; i < possibleMoves.length; i++) {
       if (possibleMoves[i] == cells.newCell) {
         return true;
@@ -322,10 +322,10 @@ export class GameProccess {
     }
     return false;
   }
-  private getEmptyCellsAroundKn(board: Figures, knCell: Cell): Cell[] {
+  private getEmptyCellsAroundKn(boards: Boards, knCell: Cell): Cell[] {
     const result: Cell[] = [];
     this.getCellsAround(knCell).map((cell: Cell) => {
-      if (this.checkIsCellEmpty({ board: board, opponent: board }, cell)) {
+      if (this.checkIsCellEmpty(boards, cell) || this.isStrikeAfterMove(cell)) {
         result.push(cell);
       }
     });
@@ -369,24 +369,26 @@ export class GameProccess {
     return true;
   }
   public isShahAppearsAfterMove(figure: Figure, cell: Cell): boolean {
-    const possibleShahes = this.store.getPossibleShahes();
+    const possibleShahesForSide = this.store.getPossibleShahes()[this.store.side];
     const { board, opponent } = this.getBoards();
     let knCell = board.get('Kn');
-    const possibleShahesForSide = possibleShahes[this.store.side];
 
     const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
-      if (possibleShahesForSide.has(strike.figure)) return false;
+      possibleShahesForSide.delete(figure);
     }
 
     board.set(figure, cell);
     if (figure === 'Kn') knCell = cell;
+    this.setMoveSide();
 
-    for (const figure of possibleShahesForSide) {
-      if (this.verifyFigureMove(opponent, board, figure, knCell)) {
+    for (const opponentFigure of possibleShahesForSide) {
+      if (this.verifyFigureMove(opponent, board, opponentFigure, knCell)) {
+        this.setMoveSide();
         return true;
       }
     }
+    this.setMoveSide();
     return false;
   }
   public isShahRemainsAfterMove(figure: Figure, cell: Cell): boolean {
@@ -399,81 +401,44 @@ export class GameProccess {
     if (strike) {
       if (strike.figure == this.store.shah.byFigure) return false;
     }
+    
     board.set(figure, cell);
     if (figure === 'Kn') knCell = cell;
     
-    this.store.turnSide = this.getOpponentSide();
+    this.setMoveSide();
     if (this.verifyFigureMove(opponent, board, this.store.shah.byFigure, knCell)) {
-      this.store.turnSide = this.getOpponentSide();
+      this.setMoveSide();
       return true;
     }
-    this.store.turnSide = this.getOpponentSide();
+    this.setMoveSide();
     return false;
   }
   public removeShah(): void {
     this.store.removeShah();
   }
-  public setPossibleShahes(figure: Figure, cell: Cell): void { 
-    const enemyKnCell: Cell = this.store.side == 'w' ?
-      this.store.getBlack().get('Kn'):
-      this.store.getWhite().get('Kn');
-    const opponentBoard: Figures = new Map();
-    opponentBoard.set('Kn', enemyKnCell);
+  public setPossibleShah(figure: Figure, cell: Cell): void { 
+    const enemyKnCell: Cell = this.getBoards().opponent.get('Kn');
+    const opponent: Figures = new Map();
     const board: Figures = new Map();
+    opponent.set('Kn', enemyKnCell);
     board.set(figure, cell);
     
-    if (this.verifyFigureMove(board, opponentBoard, figure, enemyKnCell)) {
+    if (this.verifyFigureMove(board, opponent, figure, enemyKnCell)) {
       this.store.setPossibleShah(this.getOpponentSide(), figure);
     }
   }
-  public setFiguresStrikeAroundKn(figure: Figure) {
-    const { board, opponent } = this.getBoards();
-    const possibleKnMoves = this.store.side == 'w'?
-      this.getEmptyCellsAroundKn(this.store.getBlack(), this.store.getBlack().get('Kn')):
-      this.getEmptyCellsAroundKn(this.store.getWhite(), this.store.getWhite().get('Kn'));
+  public setFigureStrikeAroundKn(figure: Figure, cell: Cell) {
+    const enemyKnCell: Cell = this.getBoards().opponent.get('Kn');
+    const opponent: Figures = new Map();
+    const board: Figures = new Map();
+    opponent.set('Kn', enemyKnCell);
+    board.set(figure, cell);
+    const possibleKnMoves = this.getEmptyCellsAroundKn({ board, opponent }, enemyKnCell);
     possibleKnMoves.map((cell: Cell) => {
       if (this.verifyFigureMove(board, opponent, figure, cell)) {
         this.store.setStrikeAroundKn(this.getOpponentSide(), figure);
       }
     });
-  }
-  public checkFiguresAroundKn() {
-    const figures = this.store.getStrikeAroundKn()[this.getOpponentSide()];
-    const { board, opponent } = this.getBoards();
-    const knCell = opponent.get('Kn');
-    const possibleKnMoves = this.getEmptyCellsAroundKn(opponent, knCell);
-
-    for (const figure of figures) {
-      let canMove = false;
-      for (let j = 0; j < possibleKnMoves.length; j++) {
-        if (this.verifyFigureMove(board, opponent, figure, possibleKnMoves[j])) {
-          canMove = true;
-          break;
-        }
-      }
-      if (!canMove) {
-        figures.delete(figure);
-      }
-    }
-  }
-  public checkPossibleShahes(): void {
-    const figures =  this.store.getPossibleShahes()[this.store.side];
-    const knCell = this.store.side == 'b' ?
-      this.store.getBlack().get('Kn'):
-      this.store.getWhite().get('Kn');
-    let board: Figures = new Map();
-    const opponent: Figures = new Map();
-    opponent.set('Kn', knCell);
-    for (const figure of figures) {
-      this.store.side == 'b' ?
-        board.set(figure, this.store.getWhite().get(figure)):
-        board.set(figure, this.store.getBlack().get(figure));
-      if (!board.get(figure)) continue;
-      if (!this.verifyFigureMove(board, opponent, figure, knCell)) {
-        figures.delete(figure);
-      }
-      board = new Map();
-    }
   }
 
   public setShah(movedFigure: Figure): null|ShahData {
@@ -504,17 +469,18 @@ export class GameProccess {
   public setMate(movedFigure: Figure, cell: Cell): null|MateData {
     if (!this.store.shah) return null;
     if (this.canCoverKnWhenShahed()) return null;
-    console.log('t');
+    
     const opponentSide: 'w'|'b' = this.getOpponentSide();
     const { board, opponent }: Boards = this.getBoards();
     const enemyKnCell: Cell = opponent.get('Kn');
     //if opponent can strike figure which set shah return null
     for (const opFigure in opponent) {
+      if (opFigure === 'Kn') continue;
       if (this.verifyFigureMove(opponent, board, opFigure, cell)) {
         return null;
       }
     }
-    const emptyCells: Cell[] = this.getEmptyCellsAroundKn(opponent, enemyKnCell);
+    const emptyCells: Cell[] = this.getEmptyCellsAroundKn({ board, opponent }, enemyKnCell);
     const figuresAroundKn: Set<Figure> = this.store.getStrikeAroundKn()[opponentSide];
     const canKnMoveCells: Cell[] = [];
     for (let i = 0; i < emptyCells.length; i++) {
