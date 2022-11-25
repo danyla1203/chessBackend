@@ -1,5 +1,5 @@
 import * as ws from 'websocket';
-import { CompletedMove, Game, Player } from './Game';
+import { CompletedMove, Game, GameData, Player, UserInGame } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from '../GameList/GameList';
@@ -14,7 +14,8 @@ enum GameResponseTypes {
   UPDATE_STATE = 'UPDATE_STATE',
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
-  MATE = 'MATE'
+  MATE = 'MATE',
+  PLAYER_TIMEOUT = 'PLAYER_TIMEOUT'
 }
 
 export enum GameTypes {
@@ -25,30 +26,31 @@ export enum GameTypes {
 }
 
 export type TurnData = {
-  figure?: Figure,
-  cell?: Cell,
+  figure?: Figure
+  cell?: Cell
 }
-type CreateNewGameData = {
-
+export type GameConfig = {
+  side: 'rand'|'w'|'b'
+  time: number
+  addTime: number
 }
 
 type CreateNewGameBody = {
-  type: GameTypes.START_NEW,
-  payload: CreateNewGameData
+  type: GameTypes.START_NEW
+  body: GameConfig
 }
 type MakeTurnBody = {
-  type: GameTypes.MAKE_TURN,
+  type: GameTypes.MAKE_TURN
   gameId: string
   body: TurnData
 }
 type ConnectToGameBody = {
-  type: GameTypes.CONNECT_TO_EXISTING_GAME,
+  type: GameTypes.CONNECT_TO_EXISTING_GAME
   gameId: string
 }
- 
 
 export type GameRequest = Request & {
-  type: RequestTypes.Game,
+  type: RequestTypes.Game
   body: CreateNewGameBody|MakeTurnBody|ConnectToGameBody
 }
 
@@ -56,7 +58,6 @@ export class GameRouter {
   games: Game[];
   GameList: GameList;
   sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void;
-
 
   constructor(
     GameList: GameList,
@@ -118,12 +119,16 @@ export class GameRouter {
     return false;
   }
 
-  private startNewGameRout(user: User): void {
+  private startNewGameRout(user: User, gameConfig: GameConfig): void {
     if (this.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
 
-    const game = new Game(user);
+    const game = new Game(user, (users: UserInGame[], data: GameData) => {
+      users.forEach(({ conn }: UserInGame) => {
+        this.sendGameMessage(conn, GameResponseTypes.PLAYER_TIMEOUT, data);
+      });
+    }, gameConfig);
     this.games.push(game);
-
+    
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
     this.GameList.handleNewGame(this.games);
   }
@@ -164,21 +169,20 @@ export class GameRouter {
     this.sendTurnResultToUsers(game, result);
   }
 
-  public handleMessage(user: User , request: GameRequest): void {
-    if (!request.body.type) throw new BadRequestError('No body type');
-    
-    switch (request.body.type) {
+  public handleMessage(user: User , { body }: GameRequest): void {
+    if (!body.type) throw new BadRequestError('No body type');
+    switch (body.type) {
     case GameTypes.START_NEW:
-      this.startNewGameRout(user);
+      this.startNewGameRout(user, body.body);
       break;
     case GameTypes.CONNECT_TO_EXISTING_GAME:
-      this.connectToGameRout(user, request.body.body.gameId);
+      this.connectToGameRout(user, body.body.gameId);
       break;
     case GameTypes.MAKE_TURN:
-      this.makeTurnRout(user, request.body);
+      this.makeTurnRout(user, body);
       break;
     case GameTypes.CONNECT_TO_EXISTING_GAME:
-      this.connectToGameAsSpectatorRout(user, request.body);
+      this.connectToGameAsSpectatorRout(user, body.body.gameId);
       break;
     }
   }
