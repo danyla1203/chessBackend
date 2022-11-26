@@ -35,7 +35,7 @@ export type GameData = {
 export class Game {
   id: string;
   maxTime: number;
-  timePlus: number;
+  timeIncrement: number;
   spectators: { [k: string]: Spectator };
   players: { [k: string]: Player };
   process: GameProccess;
@@ -51,7 +51,7 @@ export class Game {
   constructor(
     user: User,
     sendGameEndByTimeoutCallback: (usersInGame: UserInGame[], gameData: GameData) => void,
-    { side, time, addTime }: GameConfig, 
+    { side, time, timeIncrement }: GameConfig, 
   ) {
     this.id = makeId();
     const player: Player = { conn: user.conn, side: null, timeRemain: time };
@@ -62,7 +62,7 @@ export class Game {
     }
     this.players = { [user.userId]: player };
     this.maxTime = time;
-    this.timePlus = addTime;
+    this.timeIncrement = timeIncrement;
     this.spectators = {};
     this.process = new GameProccess();
     this.isActive = false;
@@ -135,7 +135,7 @@ export class Game {
     const shah: null|ShahData = this.process.setShah(figure);
     const mate: null|MateData = this.process.setMate(figure, cell);
     this.process.setMoveSide();
-    this.players[playerId].timeRemain += this.timePlus - (Date.now() - Date.parse(moveTurnStartDate.toString()));
+    this.players[playerId].timeRemain += this.timeIncrement - (Date.now() - Date.parse(moveTurnStartDate.toString()));
     
     side === 'w' ?
       this.findPlayerBySide('b').moveTurnStartDate = new Date():

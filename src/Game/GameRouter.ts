@@ -32,7 +32,7 @@ export type TurnData = {
 export type GameConfig = {
   side: 'rand'|'w'|'b'
   time: number
-  addTime: number
+  timeIncrement: number
 }
 
 type CreateNewGameBody = {
@@ -106,7 +106,13 @@ export class GameRouter {
       black: Object.fromEntries(black)
     };
 
-    const payload: any = { board: boards, gameId: game.id, side: game.players[userId].side }; 
+    const payload: any = { 
+      board: boards, 
+      gameId: game.id, 
+      side: game.players[userId].side,
+      maxTime: game.maxTime,
+      timeIncrement: game.timeIncrement
+    }; 
     return payload;
   }
 
