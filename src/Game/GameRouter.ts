@@ -1,5 +1,5 @@
 import * as ws from 'websocket';
-import { CompletedMove, Game, GameData, Player, UserInGame } from './Game';
+import { CompletedMove, Game, GameData, UserInGame } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from '../GameList/GameList';
@@ -10,6 +10,7 @@ import { BadRequestError } from '../errors/BadRequest';
 
 enum GameResponseTypes {
   INIT_GAME = 'INIT_GAME',
+  GAME_CREATED = 'GAME_CREATED',
   GAME_START = 'GAME_START',
   UPDATE_STATE = 'UPDATE_STATE',
   STRIKE = 'STRIKE',
@@ -135,7 +136,7 @@ export class GameRouter {
     }, gameConfig);
     this.games.push(game);
     
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
+    this.sendGameMessage(user.conn, GameResponseTypes.GAME_CREATED, {});
     this.GameList.handleNewGame(this.games);
   }
   private connectToGameAsSpectatorRout(user: User, gameId?: string): void {
@@ -153,9 +154,10 @@ export class GameRouter {
     if (!game) throw new GameNotFound();
     game.addPlayer(user);
     game.start();
-
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, this.initGameData(user.userId, game));
-    Object.values(game.players).map((player: Player) => {
+    
+    Object.keys(game.players).map((playerId: string) => {
+      const player = game.players[playerId];
+      this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, this.initGameData(playerId, game));
       this.sendGameMessage(player.conn, GameResponseTypes.GAME_START, {});
     });
   } 

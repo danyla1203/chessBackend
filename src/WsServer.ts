@@ -105,6 +105,7 @@ export class WsServer {
         try {
           this.handleMessage(user, parsedMessage);
         } catch (e: unknown) {
+          console.error(e);
           if (e instanceof BaseError) {
             this.sendMessage(newConn, e.type, e.message);
           } else {
