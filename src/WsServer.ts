@@ -2,8 +2,8 @@ import * as ws from 'websocket';
 import { BaseError } from './errors';
 import { ErrorTypes } from './errors/types';
 import { GameData } from './Game/Game';
-import { GameRequest, GameRouter } from './Game/GameRouter';
-import { GameList } from './GameList/GameList';
+import { GameRequest, GameRouter } from './Game/GameHandler';
+import { GameList } from './Game/GameList';
 import { makeId } from './tools/createUniqueId';
 
 type Response = {
@@ -48,7 +48,6 @@ export class WsServer {
       }
     }, this.sendMessage);
     this.GameRouter = new GameRouter(this.GameList, this.sendMessage);
-    
   }
 
   private sendMessage(conn: ws.connection, type: string, payload: any): void {
@@ -96,7 +95,7 @@ export class WsServer {
       this.users.push(user);
       newConn.sendUTF('connected');
       this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
-      this.GameList.sendGameListToConnectedUser(user, this.GameRouter.games);
+      this.GameList.sendGameListToConnectedUser(user);
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
         if (!parsedMessage || !this.isMessageStructValid(parsedMessage)) {

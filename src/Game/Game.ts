@@ -4,7 +4,7 @@ import { BadMoveError } from '../errors/Game/BadMove';
 import { makeId } from '../tools/createUniqueId';
 import { User } from '../WsServer';
 import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
-import { GameConfig, TurnData } from './GameRouter';
+import { GameConfig, MakeTurnBody, TurnData } from './GameHandler';
 
 export type UserInGame = {
   conn: ws.connection;
@@ -41,6 +41,12 @@ export class Game {
   process: GameProccess;
   isActive: boolean;
   endGameByTimeout: (usersInGame: UserInGame[], gameData: GameData) => void;
+
+  static isMakeTurnRequestValid(request: MakeTurnBody): boolean {
+    if (!request.gameId) return false;
+    if (!request.body || !request.body?.cell || !request.body?.figure) return false;
+    return true;
+  }
 
   private findPlayerBySide(side: 'w'|'b'): Player {
     for (const player of Object.values(this.players)) {
@@ -79,6 +85,22 @@ export class Game {
       players: playersData,
       isActive: this.isActive
     };
+  }
+  public initedGameData(userId: string) {
+    const { white, black } = this.actualState();
+    const boards = {
+      white: Object.fromEntries(white),
+      black: Object.fromEntries(black)
+    };
+
+    const payload: any = { 
+      board: boards, 
+      gameId: this.id,
+      side: this.players[userId].side,
+      maxTime: this.maxTime,
+      timeIncrement: this.timeIncrement
+    }; 
+    return payload;
   }
   public addPlayer(user: User): void {
     const playerSide: 'w'|'b' = Object.values(this.players)[0].side;
