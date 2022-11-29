@@ -5,6 +5,7 @@ import { makeId } from '../tools/createUniqueId';
 import { User } from '../WsServer';
 import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
 import { GameConfig, MakeTurnBody, TurnData } from './GameHandler';
+import { GameChat, IncomingMessage, MessageData } from './GameChat';
 
 export type UserInGame = {
   conn: ws.connection;
@@ -39,6 +40,7 @@ export class Game {
   spectators: { [k: string]: Spectator };
   players: { [k: string]: Player };
   process: GameProccess;
+  chat: GameChat;
   isActive: boolean;
   endGameByTimeout: (usersInGame: UserInGame[], gameData: GameData) => void;
 
@@ -71,6 +73,7 @@ export class Game {
     this.timeIncrement = timeIncrement;
     this.spectators = {};
     this.process = new GameProccess();
+    this.chat = new GameChat(user.userId);
     this.isActive = false;
     this.endGameByTimeout = sendGameEndByTimeoutCallback;
   }
@@ -110,6 +113,7 @@ export class Game {
       conn: user.conn,
       side: newPlayerSide
     };
+    this.chat.addChatParticipant(user.userId);
   }
   public addSpectator(user: User): void {
     this.spectators[user.userId] = {
@@ -168,7 +172,10 @@ export class Game {
       shah: shah,
       strikedData: striked
     };
-  } 
+  }
+  public chatMessage(userId: string, message: IncomingMessage): MessageData {
+    return this.chat.addMessage(userId, message);
+  }
   public actualState(): FiguresState {
     return this.process.state();
   }

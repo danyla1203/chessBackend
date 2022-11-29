@@ -7,6 +7,7 @@ import { InactiveGameError } from '../errors/Game/InactiveGame';
 import { GameNotFound } from '../errors/Game/NotFound';
 import { UserInAnotherGame } from '../errors/Game/UserInAnotherGame';
 import { BadRequestError } from '../errors/BadRequest';
+import { IncomingMessage, Message } from './GameChat';
 
 enum GameResponseTypes {
   INIT_GAME = 'INIT_GAME',
@@ -16,14 +17,16 @@ enum GameResponseTypes {
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
   MATE = 'MATE',
-  PLAYER_TIMEOUT = 'PLAYER_TIMEOUT'
+  PLAYER_TIMEOUT = 'PLAYER_TIMEOUT',
+  CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
 export enum GameTypes {
   START_NEW = 'START_NEW',
   CONNECT_TO_EXISTING_GAME = 'CONNECT_TO_EXISTING_GAME',
   CONNECT_TO_GAME_AS_SPECTATOR = 'CONNECT_TO_GAME_AS_SPECTATOR',
-  MAKE_TURN = 'MAKE_TURN'
+  MAKE_TURN = 'MAKE_TURN',
+  CHAT_MESSAGE = 'CHAT_MESSAGE',
 }
 
 export type TurnData = {
@@ -133,8 +136,22 @@ export class GameRouter {
     this.sendTurnResultToUsers(game, result);
   }
 
+  private chatMessageHandler(user: User, gameId: string, message: IncomingMessage): void {
+    const game: Game|null = this.GameList.findGame(gameId);
+    if (!game) throw new GameNotFound();
+
+    const result: Message|null = game.chatMessage(user.userId, message);
+    if (result) {
+      Object.keys(game.players).map((playerId: string) => {
+        const player = game.players[playerId];
+        this.sendGameMessage(player.conn, GameResponseTypes.CHAT_MESSAGE, { message: result });
+      });
+    } else throw new BadRequestError('Incorrect message');
+  }
+
   public handleMessage(user: User , { body }: GameRequest): void {
     if (!body.type) throw new BadRequestError('No body type');
+    console.log(body);
     switch (body.type) {
     case GameTypes.START_NEW:
       this.startNewGameHandler(user, body.body);
@@ -147,6 +164,9 @@ export class GameRouter {
       break;
     case GameTypes.CONNECT_TO_EXISTING_GAME:
       this.connectToGameAsSpectatorHandler(user, body.body.gameId);
+      break;
+    case GameTypes.CHAT_MESSAGE:
+      this.chatMessageHandler(user, body.body.gameId, body.body.message);
       break;
     }
   }
