@@ -1,14 +1,17 @@
 import * as ws from 'websocket';
 import * as http from 'http';
+import * as dotenv from 'dotenv';
 import { WsServer } from './WsServer';
+
+dotenv.config();
 
 const server = http.createServer(function(req, res) {
   console.log((new Date()) + ' Received request for ' + req.url);
   res.writeHead(200);
   res.end('Http Server');
 });
-server.listen(3000, function() {
-  console.log((new Date()) + ' Server is listening on port 3000');
+server.listen(process.env.PORT, function() {
+  console.log((new Date()) + ` Server is listening on port ${process.env.PORT}`);
 });
 
 const wsServer = new ws.server({
