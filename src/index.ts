@@ -1,16 +1,34 @@
 import * as ws from 'websocket';
-import * as http from 'http';
 import * as dotenv from 'dotenv';
-import { WsServer } from './WsServer';
-
 dotenv.config();
+import * as http from 'http';
+import { WsServer } from './WsServer';
+import { dataSource } from './db';
+import { HttpServer } from './lib/HttpServer';
+import { AuthController } from './Auth/AuthController';
+import { UserController } from './User/UserController';
+import { UserService } from './User/UserService';
+import { AuthService } from './Auth/AuthService';
 
-const server = http.createServer(function(req, res) {
-  console.log((new Date()) + ' Received request for ' + req.url);
-  res.writeHead(200);
-  res.end('Http Server');
-});
-server.listen(process.env.PORT, function() {
+dataSource.initialize()
+  .then(() => {
+    console.log('Data Source has been initialized!');
+    dataSource.synchronize();
+  })
+  .catch((err) => {
+    console.error('Error during Data Source initialization:', err);
+  });
+const server = http.createServer();
+
+const userService = new UserService();
+const authService = new AuthService();
+const controllers = [
+  new UserController(userService, authService), 
+  new AuthController(authService)
+];
+const httpServer: HttpServer = new HttpServer(server, controllers);
+
+server.listen(process.env.PORT, () => {
   console.log((new Date()) + ` Server is listening on port ${process.env.PORT}`);
 });
 
@@ -20,3 +38,4 @@ const wsServer = new ws.server({
 
 const Server = new WsServer(wsServer);
 Server.run();
+httpServer.run();
