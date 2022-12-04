@@ -51,12 +51,12 @@ export class AuthService {
 
   public async checkAccessToken(token?: string): Promise<UserEntity> {
     if (!token) throw new BadRequestError('Provide token');
-    const { id } = this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
+    const { id, deviceId } = this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
 
     const user = await this.User.findOneBy({ id });
     if (!user) throw new BadRequestError('Invalid access token');
 
-    const auth = await this.Auth.findOneBy({ user: user.id });
+    const auth = await this.Auth.findOneBy({ user: user.id, deviceId });
     if (!auth) throw new BadRequestError('Session expired');
     if (auth.expiresIn < new Date()) {
       await this.Auth.delete(auth);
@@ -71,6 +71,16 @@ export class AuthService {
     if (user.password !== password) throw new BadRequestError('Incorrect password');
     await this.Auth.delete({ deviceId });
     return this.createAuth(user.id, deviceId);
+  }
+  public async logout(token?: string) {
+    const { id, deviceId } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
+    await this.Auth.delete({ user: id, deviceId });
+    return { isDeleted: true };
+  }
+  public async logoutAll(token?: string) {
+    const { id } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
+    await this.Auth.delete({ user: id });
+    return { isDeleted: true };
   }
 
   public async getNewTokenPair(refreshToken: string) {

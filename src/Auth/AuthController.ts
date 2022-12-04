@@ -1,7 +1,7 @@
 import { Auth, AuthService } from '../Auth/AuthService';
 import { BadRequestError } from '../errors/BadRequest';
 import { Request } from '../lib/ExtendContext';
-import { post, put } from '../lib/httpMethodDecorators';
+import { Delete, post, put } from '../lib/httpMethodDecorators';
 import { loginSchema, refreshTokenSchema } from './Auth.validation';
 
 export class AuthController {
@@ -21,5 +21,13 @@ export class AuthController {
     const { error } = refreshTokenSchema.validate(body);
     if (error) throw new BadRequestError('Incorrect body');
     return this.authService.getNewTokenPair(body.refreshToken);
+  }
+  @Delete('/logout')
+  public logout(req: Request) {
+    return this.authService.logout(req.token);
+  }
+  @Delete('/logout/all')
+  public logoutAll(req: Request) {
+    return this.authService.logoutAll(req.token);
   }
 }
