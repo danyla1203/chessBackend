@@ -1,12 +1,20 @@
 {
   "dependencies": {
+    "@types/busboy": "^1.5.0",
     "@types/node": "16.11.9",
     "@types/websocket": "1.0.4",
+    "busboy": "^1.6.0",
     "dotenv": "^16.0.3",
+    "joi": "^17.7.0",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.8.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.10",
     "typescript": "4.5.2",
     "websocket": "1.0.34"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.9",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "eslint": "8.26.0",
