@@ -3,7 +3,6 @@ import { AuthEntity } from './Entities/AuthEntity';
 import { UserEntity } from './Entities/UserEntity';
 
 const { HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USERNAME } = process.env;
-console.log(HOST, DB_NAME, DB_PASSWORD, DB_PORT);
 
 export const dataSource = new DataSource({
   type: 'postgres',

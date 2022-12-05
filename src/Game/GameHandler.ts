@@ -151,7 +151,6 @@ export class GameRouter {
 
   public handleMessage(user: User , { body }: GameRequest): void {
     if (!body.type) throw new BadRequestError('No body type');
-    console.log(body);
     switch (body.type) {
     case GameTypes.START_NEW:
       this.startNewGameHandler(user, body.body);

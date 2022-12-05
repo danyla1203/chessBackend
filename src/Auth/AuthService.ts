@@ -72,18 +72,18 @@ export class AuthService {
     await this.Auth.delete({ deviceId });
     return this.createAuth(user.id, deviceId);
   }
-  public async logout(token?: string) {
+  public async logout(token?: string): Promise<{ isDeleted: boolean }> {
     const { id, deviceId } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
     await this.Auth.delete({ user: id, deviceId });
     return { isDeleted: true };
   }
-  public async logoutAll(token?: string) {
+  public async logoutAll(token?: string): Promise<{ isDeleted: boolean }> {
     const { id } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
     await this.Auth.delete({ user: id });
     return { isDeleted: true };
   }
 
-  public async getNewTokenPair(refreshToken: string) {
+  public async getNewTokenPair(refreshToken: string): Promise<Auth> {
     const { id } = this.decodeToken(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     const auth = await this.Auth.findOne({

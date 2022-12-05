@@ -56,8 +56,7 @@ export class HttpServer {
     try {
       const result: any = await handler.handlerFunc(req, res);
       res.end(JSON.stringify(result));
-    } catch (e: any) {
-      console.log(e);
+    } catch (e: unknown) {
       if (e instanceof BaseError) {
         res.statusCode = e.statusCode;
         res.end(JSON.stringify({ error: e.message }));

@@ -136,8 +136,6 @@ export class Game {
         }
       }.bind(this), this.maxTime);
     });
-
-    console.log('Game Start!');
   }
 
   public makeTurn(playerId: number, turn: TurnData): null|CompletedMove {

@@ -108,14 +108,13 @@ export class WsServer {
     }
     return user;
   }
-  
-  public run() {
+
+  public run(): void {
     this.ws.on('request', async (req: ws.request) => {
       let newConn: ws.connection;
       try {
         newConn = req.accept('echo-protocol', req.origin);
       } catch (e) {
-        console.log(e);
         return;
       }
 
@@ -133,7 +132,6 @@ export class WsServer {
         try {
           this.handleMessage(user, parsedMessage);
         } catch (e: unknown) {
-          console.error(e);
           if (e instanceof BaseError) {
             this.sendMessage(newConn, e.type, e.message);
           } else {
