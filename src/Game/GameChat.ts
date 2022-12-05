@@ -7,22 +7,22 @@ export type Message = {
   date: Date
 }
 export type MessageData = {
-  playerId: string
+  playerId: number
   text: string
   date: Date
 }
 
 export class GameChat {
-  messages: { [k: string]: Message[] };
+  messages: { [k: number]: Message[] };
 
-  constructor(playerId: string) {
+  constructor(playerId: number) {
     this.messages = { [playerId]: [] };
   }
-  addChatParticipant(playerId: string) {
+  addChatParticipant(playerId: number) {
     this.messages[playerId] = [];
   }
   
-  public addMessage(playerId: string, message: IncomingMessage): null|MessageData {
+  public addMessage(playerId: number, message: IncomingMessage): null|MessageData {
     if (!message.text) return null;
     if (!this.messages[playerId]) return null;
     const messageData = { text: message.text, date: new Date() };
@@ -32,7 +32,7 @@ export class GameChat {
   public getAllMessages(): MessageData[]  {
     const msgArr: MessageData[] = [];
     for (const playerId in this.messages) {
-      for (const message of this.messages[playerId]) msgArr.push({ playerId, ...message });
+      for (const message of this.messages[playerId]) msgArr.push({ playerId: parseInt(playerId, 10), ...message });
     }
     return msgArr;
   }

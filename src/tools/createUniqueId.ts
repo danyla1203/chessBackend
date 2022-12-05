@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
-export const makeId = (): string => {
-  return randomBytes(10).toString('hex');
+export const makeId = (): number => {
+  return Math.floor(Math.random() * 100000);
 };

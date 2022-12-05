@@ -36,6 +36,6 @@ const wsServer = new ws.server({
   httpServer: server,
 });
 
-const Server = new WsServer(wsServer);
+const Server = new WsServer(wsServer, authService);
 Server.run();
 httpServer.run();

@@ -45,12 +45,12 @@ type CreateNewGameBody = {
 }
 export type MakeTurnBody = {
   type: GameTypes.MAKE_TURN
-  gameId: string
+  gameId: number
   body: TurnData
 }
 type ConnectToGameBody = {
   type: GameTypes.CONNECT_TO_EXISTING_GAME
-  gameId: string
+  gameId: number
 }
 
 export type GameRequest = Request & {
@@ -102,7 +102,7 @@ export class GameRouter {
     this.sendGameMessage(user.conn, GameResponseTypes.GAME_CREATED, {});
   }
   
-  private connectToGameAsSpectatorHandler(user: User, gameId?: string): void {
+  private connectToGameAsSpectatorHandler(user: User, gameId?: number): void {
     const game: Game|null = this.GameList.findGame(gameId);
 
     if (!game) throw new GameNotFound();
@@ -110,7 +110,7 @@ export class GameRouter {
     this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, game.initedGameData(user.userId));
   }
 
-  private connectToGameHandler(user: User, gameId?: string): void {
+  private connectToGameHandler(user: User, gameId?: number): void {
     if (this.GameList.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
 
     const game: Game|null = this.GameList.findGame(gameId);
@@ -120,8 +120,8 @@ export class GameRouter {
     game.start();
     
     Object.keys(game.players).map((playerId: string) => {
-      const player = game.players[playerId];
-      this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(playerId));
+      const player = game.players[parseInt(playerId)];
+      this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(parseInt(playerId)));
       this.sendGameMessage(player.conn, GameResponseTypes.GAME_START, {});
     });
   } 
@@ -136,14 +136,14 @@ export class GameRouter {
     this.sendTurnResultToUsers(game, result);
   }
 
-  private chatMessageHandler(user: User, gameId: string, message: IncomingMessage): void {
+  private chatMessageHandler(user: User, gameId: number, message: IncomingMessage): void {
     const game: Game|null = this.GameList.findGame(gameId);
     if (!game) throw new GameNotFound();
 
     const result: Message|null = game.chatMessage(user.userId, message);
     if (result) {
       Object.keys(game.players).map((playerId: string) => {
-        const player = game.players[playerId];
+        const player = game.players[parseInt(playerId)];
         this.sendGameMessage(player.conn, GameResponseTypes.CHAT_MESSAGE, { message: result });
       });
     } else throw new BadRequestError('Incorrect message');

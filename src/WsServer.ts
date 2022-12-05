@@ -1,4 +1,6 @@
 import * as ws from 'websocket';
+import { AuthService } from './Auth/AuthService';
+import { UserEntity } from './Entities/UserEntity';
 import { BaseError } from './errors';
 import { ErrorTypes } from './errors/types';
 import { GameData } from './Game/Game';
@@ -23,7 +25,7 @@ export enum ResponseTypes {
 }
 
 export type User = {
-  userId: string,
+  userId: number,
   name: string,
   conn: ws.connection
 }
@@ -38,8 +40,9 @@ export class WsServer {
   users: User[];
   GameRouter: GameRouter;
   GameList: GameList;
+  authService: AuthService;
 
-  constructor(ws: ws.server) {
+  constructor(ws: ws.server, authService: AuthService) {
     this.ws = ws;
     this.users = [];
     this.GameList = new GameList((games: GameData[]) => {
@@ -48,6 +51,7 @@ export class WsServer {
       }
     }, this.sendMessage);
     this.GameRouter = new GameRouter(this.GameList, this.sendMessage);
+    this.authService = authService;
   }
 
   private sendMessage(conn: ws.connection, type: string, payload: any): void {
@@ -78,9 +82,35 @@ export class WsServer {
       break;
     }
   }
-
+  private createUser(conn: ws.connection): User {
+    return {
+      name: 'Anonymous',
+      userId: makeId(),
+      conn
+    };
+  }
+  private async setUser(req: ws.request, conn: ws.connection): Promise<User> {
+    let user: User;
+    const query = req.resourceURL.query;
+    if (typeof query === 'object' && query['Authorization']) {
+      try {
+        const userEntity: UserEntity = await this.authService.checkAccessToken(query['Authorization'] as string);
+        user = {
+          userId: userEntity.id,
+          name: userEntity.name,
+          conn
+        };
+      } catch (e) {
+        user = this.createUser(conn);
+      }
+    } else {
+      user = this.createUser(conn);
+    }
+    return user;
+  }
+  
   public run() {
-    this.ws.on('request', (req: ws.request) => {
+    this.ws.on('request', async (req: ws.request) => {
       let newConn: ws.connection;
       try {
         newConn = req.accept('echo-protocol', req.origin);
@@ -88,11 +118,10 @@ export class WsServer {
         console.log(e);
         return;
       }
-    
-      const userId: string = makeId();
-      
-      const user: User = { conn: newConn, name: 'Anonymous', userId };
+
+      const user: User = await this.setUser(req, newConn);
       this.users.push(user);
+
       newConn.sendUTF('connected');
       this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
       this.GameList.sendGameListToConnectedUser(user);

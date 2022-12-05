@@ -16,14 +16,14 @@ export class GameList {
     this.games = [];
   }
 
-  public findGame(gameId: string): Game|null {
+  public findGame(gameId: number): Game|null {
     for (const game of this.games) {
       if (game.id === gameId) return game;
     }
     return null;
   }
 
-  public isUserInGameAlready(userId: string): boolean {
+  public isUserInGameAlready(userId: number): boolean {
     for (const game of this.games) {
       if (game.players[userId] || game.spectators[userId]) {
         return true;

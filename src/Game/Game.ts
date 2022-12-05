@@ -28,17 +28,17 @@ type PlayerData = {
   id: string
 }
 export type GameData = {
-  id: string
+  id: number
   spectators: number
   players: PlayerData[]
   isActive: boolean
 }
 export class Game {
-  id: string;
+  id: number;
   maxTime: number;
   timeIncrement: number;
-  spectators: { [k: string]: Spectator };
-  players: { [k: string]: Player };
+  spectators: { [k: number]: Spectator };
+  players: { [k: number]: Player };
   process: GameProccess;
   chat: GameChat;
   isActive: boolean;
@@ -89,7 +89,7 @@ export class Game {
       isActive: this.isActive
     };
   }
-  public initedGameData(userId: string) {
+  public initedGameData(userId: number) {
     const { white, black } = this.actualState();
     const boards = {
       white: Object.fromEntries(white),
@@ -140,7 +140,7 @@ export class Game {
     console.log('Game Start!');
   }
 
-  public makeTurn(playerId: string, turn: TurnData): null|CompletedMove {
+  public makeTurn(playerId: number, turn: TurnData): null|CompletedMove {
     const { figure, cell } = turn;
     const { side, moveTurnStartDate }: Player = this.players[playerId];
     if (!this.process.isIncomingDataValid(side, figure, cell)) throw new BadRequestError('Invalid move data');
@@ -173,7 +173,7 @@ export class Game {
       strikedData: striked
     };
   }
-  public chatMessage(userId: string, message: IncomingMessage): MessageData {
+  public chatMessage(userId: number, message: IncomingMessage): MessageData {
     return this.chat.addMessage(userId, message);
   }
   public actualState(): FiguresState {
