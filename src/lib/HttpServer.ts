@@ -62,22 +62,28 @@ export class HttpServer {
         res.end(JSON.stringify({ error: e.message }));
       } else {
         res.statusCode = 500;
+        console.log(e);
         res.end('Server error');
       }
     }
   }
 
   private disableCors(res: Response): void {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8081');
-    res.setHeader('Access-Control-Allow-Headers', '*' );
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With' );
     res.setHeader('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
-  public run() {
+  public run(): void {
     const handlers: handler[] = this.getAllHandlersFromControllers();
     this.server.on('request', async (req: Request, res: Response) => {
       this.disableCors(res);
+      if (req.method === 'OPTIONS') {
+        res.statusCode = 200;
+        res.end();
+        return;
+      }
       res.setHeader(
         'Content-Type',
         'application/json'
