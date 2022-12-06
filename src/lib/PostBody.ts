@@ -40,12 +40,17 @@ export class PostBody {
         data += chunk;
       });
       req.on('end', () => {
-        req.body = new Map();
-        data.split('&').map((keyValue) => {
-          let keyValArr = keyValue.split('=');
-          req.body[keyValArr[0]] = keyValArr[1];
-        });
-        resolve('');
+        try {
+          req.body = JSON.parse(data);
+          resolve('');
+        } catch (e) {
+          req.body = new Map();
+          data.split('&').map((keyValue) => {
+            let keyValArr = keyValue.split('=');
+            req.body[keyValArr[0]] = keyValArr[1];
+          });
+          resolve('');
+        }
       });
     });
   }
@@ -60,6 +65,9 @@ export class PostBody {
     }
 
     switch (contentType.split(';')[0]) {
+    case 'application/json':
+      await this.handleUrlencoded(req);
+      break;
     case 'multipart/form-data':
       await this.handleMultipart(req);
       break;
