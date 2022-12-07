@@ -56,7 +56,7 @@ export class PostBody {
   }
 
   public async handle(req: Request): Promise<void> {
-    if (req.method != 'POST' && req.method != 'PUT') {
+    if (req.method !== 'POST' && req.method !== 'PUT') {
       return;
     }
     const contentType = req.headers['content-type'];
