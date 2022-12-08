@@ -96,7 +96,7 @@ export class AuthService {
     });
     if (!auth) throw new BadRequestError('Session expired');
     if (auth.expiresIn < new Date()) {
-      this.Auth.delete(auth);
+      await this.Auth.delete(auth);
       throw new BadRequestError('Session expired');
     }
     await this.Auth.delete(auth.id);
