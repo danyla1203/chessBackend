@@ -121,7 +121,6 @@ export class WsServer {
       const user: User = await this.setUser(req, newConn);
       this.users.push(user);
 
-      newConn.sendUTF('connected');
       this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
       this.GameList.sendGameListToConnectedUser(user);
       newConn.on('message', (message: ws.Message) => {
