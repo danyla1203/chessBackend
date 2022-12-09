@@ -1,5 +1,5 @@
 import * as ws from 'websocket';
-import { CompletedMove, Game, GameData, UserInGame } from './Game';
+import { CompletedMove, Game, GameData, Player, UserInGame } from './Game';
 import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from './GameList';
@@ -14,6 +14,7 @@ enum GameResponseTypes {
   GAME_CREATED = 'GAME_CREATED',
   GAME_START = 'GAME_START',
   UPDATE_STATE = 'UPDATE_STATE',
+  UPDATE_TIMERS = 'UPDATE_TIMERS',
   STRIKE = 'STRIKE',
   SHAH = 'SHAH',
   MATE = 'MATE',
@@ -134,6 +135,8 @@ export class GameRouter {
     
     const result: CompletedMove = game.makeTurn(user.userId, moveData.body);
     this.sendTurnResultToUsers(game, result);
+    const player: Player = game.players[user.userId];
+    this.sendGameMessage(player.conn, GameResponseTypes.UPDATE_TIMERS, { timeRemain: player.timeRemain, side: player.side });
   }
 
   private chatMessageHandler(user: User, gameId: number, message: IncomingMessage): void {
