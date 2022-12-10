@@ -147,7 +147,10 @@ export class GameRouter {
     if (result) {
       Object.keys(game.players).map((playerId: string) => {
         const player = game.players[parseInt(playerId)];
-        this.sendGameMessage(player.conn, GameResponseTypes.CHAT_MESSAGE, { message: result });
+        this.sendGameMessage(
+          player.conn, 
+          GameResponseTypes.CHAT_MESSAGE, 
+          { message: result, author: { id: user.userId, name: user.name } });
       });
     } else throw new BadRequestError('Incorrect message');
   }
