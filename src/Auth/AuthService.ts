@@ -6,6 +6,8 @@ import { UserEntity } from '../Entities/UserEntity';
 import { AuthEntity } from '../Entities/AuthEntity';
 import { BadRequestError } from '../errors/BadRequest';
 import { NotFound } from '../errors/NotFound';
+import { AnonymousUserData } from '../User/UserService';
+import { makeId } from '../tools/createUniqueId';
 
 type TokenPayload = {
   id: number
@@ -72,10 +74,10 @@ export class AuthService {
     await this.Auth.delete({ deviceId });
     return this.createAuth(user.id, deviceId);
   }
-  public async logout(token?: string): Promise<{ isDeleted: boolean }> {
+  public async logout(token?: string): Promise<AnonymousUserData> {
     const { id, deviceId } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
     await this.Auth.delete({ user: id, deviceId });
-    return { isDeleted: true };
+    return { id: makeId(), name: 'Anonymous' };
   }
   public async logoutAll(token?: string): Promise<{ isDeleted: boolean }> {
     const { id } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);

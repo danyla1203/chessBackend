@@ -2,6 +2,7 @@ import { Auth, AuthService } from '../Auth/AuthService';
 import { BadRequestError } from '../errors/BadRequest';
 import { Request } from '../lib/ExtendContext';
 import { Delete, post, put } from '../lib/httpMethodDecorators';
+import { AnonymousUserData } from '../User/UserService';
 import { loginSchema, refreshTokenSchema } from './Auth.validation';
 
 export class AuthController {
@@ -23,7 +24,7 @@ export class AuthController {
     return this.authService.getNewTokenPair(body.refreshToken);
   }
   @Delete('/logout')
-  public logout(req: Request): Promise<{ isDeleted: boolean }> {
+  public logout(req: Request): Promise<AnonymousUserData> {
     return this.authService.logout(req.token);
   }
   @Delete('/logout/all')

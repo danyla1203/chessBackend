@@ -9,6 +9,11 @@ export type UserRegistrationData = {
   password: string
 }
 
+export type AnonymousUserData = {
+  id: number
+  name: 'Anonymous'
+}
+
 export class UserService {
   User: Repository<UserEntity>;
   constructor() {
