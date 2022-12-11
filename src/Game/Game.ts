@@ -9,6 +9,7 @@ import { GameChat, IncomingMessage, MessageData } from './GameChat';
 
 export type UserInGame = {
   conn: ws.connection;
+  name: string
 }
 export type Player = UserInGame & {
   side: 'w' | 'b'
@@ -26,17 +27,22 @@ export type CompletedMove = {
 
 type PlayerData = {
   id: string
+  name: string
 }
 export type GameData = {
   id: number
   spectators: number
   players: PlayerData[]
   isActive: boolean
+  maxTime: number
+  timeIncrement: number
+  side: 'w'|'b'|'rand';
 }
 export class Game {
   id: number;
   maxTime: number;
   timeIncrement: number;
+  side: 'w'|'b'|'rand';
   spectators: { [k: number]: Spectator };
   players: { [k: number]: Player };
   process: GameProccess;
@@ -62,12 +68,13 @@ export class Game {
     { side, time, timeIncrement }: GameConfig, 
   ) {
     this.id = makeId();
-    const player: Player = { conn: user.conn, side: null, timeRemain: time };
+    const player: Player = { conn: user.conn, name: user.name, side: null, timeRemain: time };
     if (side === 'w' || side === 'b') player.side = side;
     else if (side === 'rand') {
       const sides: ['w', 'b'] = [ 'w', 'b' ];
       player.side = sides[Math.floor(Math.random() * 2)];
     }
+    this.side = side;
     this.players = { [user.userId]: player };
     this.maxTime = time;
     this.timeIncrement = timeIncrement;
@@ -80,13 +87,16 @@ export class Game {
   public gameData(): GameData {
     const playersData = [];
     for (const userId in this.players) {
-      playersData.push({ id: userId });
+      playersData.push({ id: userId, name: this.players[userId].name });
     }
     return {
       id: this.id,
       spectators: Object.values(this.spectators).length,
       players: playersData,
-      isActive: this.isActive
+      isActive: this.isActive,
+      maxTime: this.maxTime,
+      timeIncrement: this.timeIncrement,
+      side: this.side
     };
   }
   public initedGameData(userId: number) {
@@ -109,6 +119,7 @@ export class Game {
     const playerSide: 'w'|'b' = Object.values(this.players)[0].side;
     const newPlayerSide: 'w'|'b' = playerSide === 'w' ? 'b':'w';
     this.players[user.userId] = {
+      name: user.name,
       timeRemain: this.maxTime,
       conn: user.conn,
       side: newPlayerSide
