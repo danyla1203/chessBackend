@@ -58,7 +58,7 @@ export class HttpServer {
       res.end(JSON.stringify(result));
     } catch (e: unknown) {
       if (e instanceof BaseError) {
-        res.statusCode = e.statusCode;
+        res.statusCode = parseInt(e.statusCode);
         res.end(JSON.stringify({ error: e.message }));
       } else {
         res.statusCode = 500;
