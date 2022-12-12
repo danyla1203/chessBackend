@@ -36,6 +36,7 @@ export class GameList {
   }
   public removeCreatedGameByUser(userId: number) {
     this.lobby = this.lobby.filter((game: Game) => parseInt(Object.keys(game.players)[0]) !== userId);
+    this.sendLobby();
   }
   public addGame(game: Game): void {
     this.lobby.push(game);
