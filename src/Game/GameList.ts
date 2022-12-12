@@ -4,6 +4,8 @@ import { ResponseTypes, User } from '../WsServer';
 
 export class GameList {
   games: Game[];
+  lobby: Game[];
+
   sendBroadcastMessage: (games: GameData[]) => void;
   sendMessage: (conn: ws.connection, type: ResponseTypes, payload: any) => void;
 
@@ -14,17 +16,18 @@ export class GameList {
     this.sendBroadcastMessage = sendBroadcastMessage;
     this.sendMessage = sendMessage;
     this.games = [];
+    this.lobby = [];
   }
 
   public findGame(gameId: number): Game|null {
-    for (const game of this.games) {
+    for (const game of this.lobby) {
       if (game.id === gameId) return game;
     }
     return null;
   }
 
   public isUserInGameAlready(userId: number): boolean {
-    for (const game of this.games) {
+    for (const game of [ ...this.games, ...this.lobby ]) {
       if (game.players[userId] || game.spectators[userId]) {
         return true;
       }
@@ -33,17 +36,21 @@ export class GameList {
   }
   
   public addGame(game: Game): void {
-    this.games.push(game);
-    this.handleNewGame();
+    this.lobby.push(game);
+    this.sendLobby();
+  }
+  public removeGameFromLobby(gameId: number): void {
+    this.lobby = this.lobby.filter((game: Game) => game.id !== gameId);
+    this.sendLobby();
   }
 
-  public handleNewGame(): void {
-    const gameDatas: GameData[] = this.games.map((game: Game) => game.gameData());
+  public sendLobby(): void {
+    const gameDatas: GameData[] = this.lobby.map((game) => game.gameData());
     this.sendBroadcastMessage(gameDatas);
   }
 
-  public sendGameListToConnectedUser(user: User): void {
-    const gameDatas: GameData[] = this.games.map((game: Game) => game.gameData());
+  public sendLobbyToConnectedUser(user: User): void {
+    const gameDatas: GameData[] = this.lobby.map((game) => game.gameData());
     this.sendMessage(user.conn, ResponseTypes.GameList, gameDatas);
   }
 }

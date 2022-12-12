@@ -122,7 +122,7 @@ export class WsServer {
       this.users.push(user);
 
       this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
-      this.GameList.sendGameListToConnectedUser(user);
+      this.GameList.sendLobbyToConnectedUser(user);
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
         if (!parsedMessage || !this.isMessageStructValid(parsedMessage)) {

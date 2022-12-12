@@ -119,7 +119,7 @@ export class GameRouter {
     if (!game) throw new GameNotFound();
     game.addPlayer(user);
     game.start();
-    
+    this.GameList.removeGameFromLobby(game.id);
     Object.keys(game.players).map((playerId: string) => {
       const player = game.players[parseInt(playerId)];
       this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(parseInt(playerId)));
