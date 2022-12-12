@@ -34,7 +34,9 @@ export class GameList {
     }
     return false;
   }
-  
+  public removeCreatedGameByUser(userId: number) {
+    this.lobby = this.lobby.filter((game: Game) => parseInt(Object.keys(game.players)[0]) !== userId);
+  }
   public addGame(game: Game): void {
     this.lobby.push(game);
     this.sendLobby();
