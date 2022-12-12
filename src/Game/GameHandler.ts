@@ -5,7 +5,6 @@ import { Cell, Figure } from './GameProccess';
 import { GameList } from './GameList';
 import { InactiveGameError } from '../errors/Game/InactiveGame';
 import { GameNotFound } from '../errors/Game/NotFound';
-import { UserInAnotherGame } from '../errors/Game/UserInAnotherGame';
 import { BadRequestError } from '../errors/BadRequest';
 import { IncomingMessage, Message } from './GameChat';
 
@@ -91,8 +90,6 @@ export class GameRouter {
   }
   
   private startNewGameHandler(user: User, gameConfig: GameConfig): void {
-    if (this.GameList.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
-
     const game = new Game(user, (users: UserInGame[], data: GameData) => {
       users.forEach(({ conn }: UserInGame) => {
         this.sendGameMessage(conn, GameResponseTypes.PLAYER_TIMEOUT, data);
@@ -112,14 +109,15 @@ export class GameRouter {
   }
 
   private connectToGameHandler(user: User, gameId?: number): void {
-    if (this.GameList.isUserInGameAlready(user.userId)) throw new UserInAnotherGame();
-
     const game: Game|null = this.GameList.findGame(gameId);
 
     if (!game) throw new GameNotFound();
     game.addPlayer(user);
     game.start();
+
     this.GameList.removeGameFromLobby(game.id);
+    this.GameList.removeCreatedGameByUser(user.userId);
+    
     Object.keys(game.players).map((playerId: string) => {
       const player = game.players[parseInt(playerId)];
       this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(parseInt(playerId)));
