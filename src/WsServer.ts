@@ -132,7 +132,7 @@ export class WsServer {
           this.handleMessage(user, parsedMessage);
         } catch (e: unknown) {
           if (e instanceof BaseError) {
-            this.sendMessage(newConn, e.type, e.message);
+            this.sendMessage(newConn, e.type, { error: e.message, code: e.statusCode });
           } else {
             this.sendMessage(newConn, 'SERVER_ERR', {});
           }
