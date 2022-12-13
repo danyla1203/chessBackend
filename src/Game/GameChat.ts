@@ -21,10 +21,17 @@ export class GameChat {
     this.messages[playerId] = [];
   }
   
-  public addMessage(playerId: number, message: IncomingMessage): null|MessageData {
+  public addMessage(
+    playerId: number,
+    message: IncomingMessage
+  ): null|MessageData {
     if (!message.text) return null;
     if (!this.messages[playerId]) return null;
-    const messageData = { text: message.text, date: new Date() };
+
+    const messageData = { 
+      text: message.text,
+      date: new Date() 
+    };
     this.messages[playerId].push(messageData);
     return messageData;
   }

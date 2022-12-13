@@ -70,21 +70,29 @@ export class GameRouter {
     this.GameList = GameList;
   }
 
-  private sendGameMessage(conn: ws.connection, type: GameResponseTypes, payload: any): void {
+  private sendGameMessage(
+    conn: ws.connection,
+    type: GameResponseTypes,
+    payload: any
+  ): void {
     this.sendMessage(conn, ResponseTypes.Game, { type, payload });
   }
 
-  private sendTurnResultToUsers(game: Game, { shah, mate, strikedData }: CompletedMove): void {
+  private sendTurnResultToUsers(
+    game: Game, 
+    { shah, mate, strikedData }: CompletedMove
+  ): void {
     for (const player in game.players) {
       const actualState = game.actualState();
       const boards = {
         white: Object.fromEntries(actualState.white),
         black: Object.fromEntries(actualState.black)
       };
-      this.sendGameMessage(game.players[player].conn, GameResponseTypes.UPDATE_STATE, { board: boards });
-      if (strikedData) this.sendGameMessage(game.players[player].conn, GameResponseTypes.STRIKE, strikedData);
-      if (shah) this.sendGameMessage(game.players[player].conn, GameResponseTypes.SHAH, shah);
-      if (mate) this.sendGameMessage(game.players[player].conn, GameResponseTypes.MATE, mate);
+      const playerConn: ws.connection = game.players[player].conn;
+      this.sendGameMessage(playerConn, GameResponseTypes.UPDATE_STATE, { board: boards });
+      if (strikedData) this.sendGameMessage(playerConn, GameResponseTypes.STRIKE, strikedData);
+      if (shah) this.sendGameMessage(playerConn, GameResponseTypes.SHAH, shah);
+      if (mate) this.sendGameMessage(playerConn, GameResponseTypes.MATE, mate);
     }
     //TODO: send move result to spectators
   }
@@ -120,7 +128,8 @@ export class GameRouter {
 
     Object.keys(game.players).map((playerId: string) => {
       const player = game.players[parseInt(playerId)];
-      this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(parseInt(playerId)));
+      const initedGameData = game.initedGameData(parseInt(playerId));
+      this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, initedGameData);
       this.sendGameMessage(player.conn, GameResponseTypes.GAME_START, {});
     });
   } 
@@ -134,10 +143,15 @@ export class GameRouter {
     const result: CompletedMove = game.makeTurn(user.id, moveData.body);
     this.sendTurnResultToUsers(game, result);
     const player: Player = game.players[user.id];
-    this.sendGameMessage(player.conn, GameResponseTypes.UPDATE_TIMERS, { timeRemain: player.timeRemain, side: player.side });
+    const updateTimers = { timeRemain: player.timeRemain, side: player.side };
+    this.sendGameMessage(player.conn, GameResponseTypes.UPDATE_TIMERS, updateTimers);
   }
 
-  private chatMessageHandler(user: ConnectedUser, gameId: number, message: IncomingMessage): void {
+  private chatMessageHandler(
+    user: ConnectedUser,
+    gameId: number,
+    message: IncomingMessage
+  ): void {
     const game: Game|null = this.GameList.findStartedGame(gameId);
     if (!game) throw new GameNotFound();
 

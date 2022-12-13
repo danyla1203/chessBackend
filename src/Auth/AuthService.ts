@@ -43,12 +43,26 @@ export class AuthService {
   public async createAuth(userId: number, deviceId: string): Promise<Auth> {
     const auth = new AuthEntity();
     auth.user = userId;
-    const tokenPayload = { deviceId, id: userId };
-    auth.refreshToken = jwt.sign(tokenPayload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRES });
     auth.deviceId = deviceId;
-    const accessToken = jwt.sign(tokenPayload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.JWT_ACCESS_EXPIRES });
+
+    const tokenPayload = { deviceId, id: userId };
+    auth.refreshToken = jwt.sign(
+      tokenPayload, 
+      process.env.JWT_REFRESH_SECRET, 
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES }
+    );
+    const accessToken = jwt.sign(
+      tokenPayload, 
+      process.env.JWT_ACCESS_SECRET, 
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES }
+    );
+
     await this.Auth.save(auth);
-    return { access: accessToken, refresh: auth.refreshToken, expiresIn: process.env.JWT_ACCESS_EXPIRES };
+
+    return { access: accessToken, 
+      refresh: auth.refreshToken, 
+      expiresIn: process.env.JWT_ACCESS_EXPIRES 
+    };
   }
 
   public async checkAccessToken(token?: string): Promise<UserEntity> {
@@ -74,6 +88,7 @@ export class AuthService {
     await this.Auth.delete({ deviceId });
     return this.createAuth(user.id, deviceId);
   }
+  
   public async logout(token?: string): Promise<AnonymousUserData> {
     const { id, deviceId } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
     await this.Auth.delete({ user: id, deviceId });

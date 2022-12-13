@@ -55,7 +55,10 @@ export class GameState {
     this.possibleShahes[forSide].delete(figure);
   }
   public getPossibleShahes(): PossibleShahes {
-    return { b: new Set(this.possibleShahes.b), w: new Set(this.possibleShahes.w) };
+    return { 
+      b: new Set(this.possibleShahes.b),
+      w: new Set(this.possibleShahes.w)
+    };
   }
   public getStrikeAroundKn(): StrikeAround {
     return this.strikeAroundKn;

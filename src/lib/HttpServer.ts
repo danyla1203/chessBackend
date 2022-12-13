@@ -31,7 +31,11 @@ export class HttpServer {
     return handlers;
   }
 
-  private getHandler(url: string, method: string, handlers: handler[]): handler | undefined {
+  private getHandler(
+    url: string,
+    method: string,
+    handlers: handler[]
+  ): handler | undefined {
     const splitedUrl = url.substring(1).split('/');
     for (const handler of handlers) {
       if (method !== handler.method) {
@@ -52,7 +56,11 @@ export class HttpServer {
     }
   }
 
-  private async executeHandler(req: Request, res: Response, handler: handler) {
+  private async executeHandler(
+    req: Request, 
+    res: Response,
+    handler: handler
+  ) {
     try {
       const result: any = await handler.handlerFunc(req, res);
       res.end(JSON.stringify(result));
@@ -88,7 +96,7 @@ export class HttpServer {
         'Content-Type',
         'application/json'
       );
-      const handler: handler | undefined = this.getHandler(req.url, req.method, handlers);
+      const handler: handler|undefined = this.getHandler(req.url, req.method, handlers);
       if (!handler) {
         res.statusCode = 404;
         res.end(JSON.stringify({ error: 'Not found' }));

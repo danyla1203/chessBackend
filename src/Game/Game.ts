@@ -146,6 +146,7 @@ export class Game {
         if (player.timeRemain > 0) {
           setTimeout(endGameTimeout, player.timeRemain);
         } else {
+          console.log(this.players, Object.values(this.players));
           this.endGameByTimeout(Object.values(this.players), {});
           this.isActive = false;
         }

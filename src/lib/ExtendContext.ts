@@ -63,7 +63,8 @@ export class ExtendContext {
     };
   }
   private setToken(req: Request): void {
-    if (req.headers['authorization']) req.token = req.headers['authorization'].split(' ')[1];
+    const header = req.headers['authorization'];
+    if (header) req.token = header.split(' ')[1];
   }
 
   public async extend(req: Request, res: Response, pattern: string) {

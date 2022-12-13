@@ -55,7 +55,11 @@ export class WsServer {
     this.authService = authService;
   }
 
-  private sendMessage(conn: ws.connection, type: string, payload: any): void {
+  private sendMessage(
+    conn: ws.connection, 
+    type: string, 
+    payload: any
+  ): void {
     const data: Response = { type, payload };
     conn.sendUTF(JSON.stringify(data));
   }
@@ -95,8 +99,9 @@ export class WsServer {
     let user: ConnectedUser;
     const query = req.resourceURL.query;
     if (typeof query === 'object' && query['Authorization']) {
+      const accessToken: string = query['Authorization'] as string;
       try {
-        const userEntity: UserEntity = await this.authService.checkAccessToken(query['Authorization'] as string);
+        const userEntity: UserEntity = await this.authService.checkAccessToken(accessToken);
         user = {
           id: userEntity.id,
           name: userEntity.name,

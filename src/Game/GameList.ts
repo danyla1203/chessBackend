@@ -32,17 +32,8 @@ export class GameList {
     return null;
   }
 
-  public isUserInGameAlready(userId: number): boolean {
-    for (const game of [ ...this.games, ...this.lobby ]) {
-      if (game.players[userId] || game.spectators[userId]) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public removeCreatedGameByUser(userId: number) {
-    this.lobby = this.lobby.filter((game: Game) => parseInt(Object.keys(game.players)[0]) !== userId);
+    this.lobby = this.lobby.filter((game: Game) => userId in game);
     this.sendLobby();
   }
 
