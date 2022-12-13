@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
-import { CompletedMove, Game, GameData, Player, UserInGame } from './Game';
-import { Request, RequestTypes, ResponseTypes, User } from '../WsServer';
+import { CompletedMove, Game, GameData, Player } from './Game';
+import { Request, RequestTypes, ResponseTypes, ConnectedUser } from '../WsServer';
 import { Cell, Figure } from './GameProccess';
 import { GameList } from './GameList';
 import { InactiveGameError } from '../errors/Game/InactiveGame';
@@ -89,9 +89,9 @@ export class GameRouter {
     //TODO: send move result to spectators
   }
   
-  private startNewGameHandler(user: User, gameConfig: GameConfig): void {
-    const game = new Game(user, (users: UserInGame[], data: GameData) => {
-      users.forEach(({ conn }: UserInGame) => {
+  private startNewGameHandler(user: ConnectedUser, gameConfig: GameConfig): void {
+    const game = new Game(user, (users: ConnectedUser[], data: GameData) => {
+      users.forEach(({ conn }: ConnectedUser) => {
         this.sendGameMessage(conn, GameResponseTypes.PLAYER_TIMEOUT, data);
       });
     }, gameConfig);
@@ -100,24 +100,24 @@ export class GameRouter {
     this.sendGameMessage(user.conn, GameResponseTypes.GAME_CREATED, {});
   }
   
-  private connectToGameAsSpectatorHandler(user: User, gameId?: number): void {
-    const game: Game|null = this.GameList.findGame(gameId);
+  private connectToGameAsSpectatorHandler(user: ConnectedUser, gameId?: number): void {
+    const game: Game|null = this.GameList.findGameInLobby(gameId);
 
     if (!game) throw new GameNotFound();
     game.addSpectator(user);
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, game.initedGameData(user.userId));
+    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, game.initedGameData(user.id));
   }
 
-  private connectToGameHandler(user: User, gameId?: number): void {
-    const game: Game|null = this.GameList.findGame(gameId);
+  private connectToGameHandler(user: ConnectedUser, gameId?: number): void {
+    const game: Game|null = this.GameList.findGameInLobby(gameId);
 
     if (!game) throw new GameNotFound();
     game.addPlayer(user);
     game.start();
 
     this.GameList.removeGameFromLobby(game.id);
-    this.GameList.removeCreatedGameByUser(user.userId);
-    
+    this.GameList.removeCreatedGameByUser(user.id);
+
     Object.keys(game.players).map((playerId: string) => {
       const player = game.players[parseInt(playerId)];
       this.sendGameMessage(player.conn, GameResponseTypes.INIT_GAME, game.initedGameData(parseInt(playerId)));
@@ -125,35 +125,35 @@ export class GameRouter {
     });
   } 
 
-  private makeTurnHandler(user: User, moveData: MakeTurnBody): void {
+  private makeTurnHandler(user: ConnectedUser, moveData: MakeTurnBody): void {
     if (!Game.isMakeTurnRequestValid(moveData)) throw new BadRequestError('Bad request');
-    const game: Game|null = this.GameList.findGame(moveData.gameId);
+    const game: Game|null = this.GameList.findStartedGame(moveData.gameId);
     if (!game) throw new GameNotFound();
     if (!game.isActive) throw new InactiveGameError();
     
-    const result: CompletedMove = game.makeTurn(user.userId, moveData.body);
+    const result: CompletedMove = game.makeTurn(user.id, moveData.body);
     this.sendTurnResultToUsers(game, result);
-    const player: Player = game.players[user.userId];
+    const player: Player = game.players[user.id];
     this.sendGameMessage(player.conn, GameResponseTypes.UPDATE_TIMERS, { timeRemain: player.timeRemain, side: player.side });
   }
 
-  private chatMessageHandler(user: User, gameId: number, message: IncomingMessage): void {
-    const game: Game|null = this.GameList.findGame(gameId);
+  private chatMessageHandler(user: ConnectedUser, gameId: number, message: IncomingMessage): void {
+    const game: Game|null = this.GameList.findStartedGame(gameId);
     if (!game) throw new GameNotFound();
 
-    const result: Message|null = game.chatMessage(user.userId, message);
+    const result: Message|null = game.chatMessage(user.id, message);
     if (result) {
       Object.keys(game.players).map((playerId: string) => {
         const player = game.players[parseInt(playerId)];
         this.sendGameMessage(
           player.conn, 
           GameResponseTypes.CHAT_MESSAGE, 
-          { message: result, author: { id: user.userId, name: user.name } });
+          { message: result, author: { id: user.id, name: user.name } });
       });
     } else throw new BadRequestError('Incorrect message');
   }
 
-  public handleMessage(user: User , { body }: GameRequest): void {
+  public handleMessage(user: ConnectedUser , { body }: GameRequest): void {
     if (!body.type) throw new BadRequestError('No body type');
     switch (body.type) {
     case GameTypes.START_NEW:

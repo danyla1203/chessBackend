@@ -1,6 +1,6 @@
 import * as ws from 'websocket';
 import { Game, GameData } from './Game';
-import { ResponseTypes, User } from '../WsServer';
+import { ResponseTypes, ConnectedUser } from '../WsServer';
 
 export class GameList {
   games: Game[];
@@ -19,8 +19,14 @@ export class GameList {
     this.lobby = [];
   }
 
-  public findGame(gameId: number): Game|null {
+  public findGameInLobby(gameId: number): Game|null {
     for (const game of this.lobby) {
+      if (game.id === gameId) return game;
+    }
+    return null;
+  }
+  public findStartedGame(gameId: number): Game|null {
+    for (const game of this.games) {
       if (game.id === gameId) return game;
     }
     return null;
@@ -34,16 +40,20 @@ export class GameList {
     }
     return false;
   }
+
   public removeCreatedGameByUser(userId: number) {
     this.lobby = this.lobby.filter((game: Game) => parseInt(Object.keys(game.players)[0]) !== userId);
     this.sendLobby();
   }
+
   public addGame(game: Game): void {
     this.lobby.push(game);
     this.sendLobby();
   }
   public removeGameFromLobby(gameId: number): void {
-    this.lobby = this.lobby.filter((game: Game) => game.id !== gameId);
+    const index: number = this.lobby.findIndex((game: Game) => game.id === gameId);
+    this.games.push(this.lobby[index]);
+    this.lobby.splice(index, 1);
     this.sendLobby();
   }
 
@@ -52,8 +62,9 @@ export class GameList {
     this.sendBroadcastMessage(gameDatas);
   }
 
-  public sendLobbyToConnectedUser(user: User): void {
+  public sendLobbyToConnectedUser(user: ConnectedUser): void {
     const gameDatas: GameData[] = this.lobby.map((game) => game.gameData());
     this.sendMessage(user.conn, ResponseTypes.GameList, gameDatas);
   }
+
 }

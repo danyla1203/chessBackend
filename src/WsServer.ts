@@ -24,10 +24,11 @@ export enum ResponseTypes {
   User = 'User',
 }
 
-export type User = {
-  userId: number,
+export type ConnectedUser = {
+  id: number,
   name: string,
-  conn: ws.connection
+  conn: ws.connection,
+  isOnline: boolean
 }
 
 export type Request = {
@@ -37,7 +38,7 @@ export type Request = {
 
 export class WsServer {
   ws: ws.server;
-  users: User[];
+  users: ConnectedUser[];
   GameRouter: GameRouter;
   GameList: GameList;
   authService: AuthService;
@@ -75,29 +76,31 @@ export class WsServer {
     }
   }
   
-  private handleMessage(user: User, message: Request): void {
+  private handleMessage(user: ConnectedUser, message: Request): void {
     switch (message.type) {
     case RequestTypes.Game:
       this.GameRouter.handleMessage(user, message as GameRequest);
       break;
     }
   }
-  private createUser(conn: ws.connection): User {
+  private createUser(conn: ws.connection): ConnectedUser {
     return {
       name: 'Anonymous',
-      userId: makeId(),
-      conn
+      id: makeId(),
+      isOnline: true,
+      conn,
     };
   }
-  private async setUser(req: ws.request, conn: ws.connection): Promise<User> {
-    let user: User;
+  private async setUser(req: ws.request, conn: ws.connection): Promise<ConnectedUser> {
+    let user: ConnectedUser;
     const query = req.resourceURL.query;
     if (typeof query === 'object' && query['Authorization']) {
       try {
         const userEntity: UserEntity = await this.authService.checkAccessToken(query['Authorization'] as string);
         user = {
-          userId: userEntity.id,
+          id: userEntity.id,
           name: userEntity.name,
+          isOnline: true,
           conn
         };
       } catch (e) {
@@ -118,10 +121,10 @@ export class WsServer {
         return;
       }
 
-      const user: User = await this.setUser(req, newConn);
+      const user: ConnectedUser = await this.setUser(req, newConn);
       this.users.push(user);
 
-      this.sendMessage(newConn, ResponseTypes.User, { id: user.userId, name: user.name });
+      this.sendMessage(newConn, ResponseTypes.User, { id: user.id, name: user.name });
       this.GameList.sendLobbyToConnectedUser(user);
       newConn.on('message', (message: ws.Message) => {
         const parsedMessage: Request|null = this.parseMessage(message);
@@ -137,6 +140,10 @@ export class WsServer {
             this.sendMessage(newConn, 'SERVER_ERR', {});
           }
         }
+      });
+      newConn.on('close', () => {
+        this.GameList.removeCreatedGameByUser(user.id);
+
       });
     });
   }

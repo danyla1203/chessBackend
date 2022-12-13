@@ -1,21 +1,16 @@
-import * as ws from 'websocket';
 import { BadRequestError } from '../errors/BadRequest';
 import { BadMoveError } from '../errors/Game/BadMove';
 import { makeId } from '../tools/createUniqueId';
-import { User } from '../WsServer';
+import { ConnectedUser } from '../WsServer';
 import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
 import { GameConfig, MakeTurnBody, TurnData } from './GameHandler';
 import { GameChat, IncomingMessage, MessageData } from './GameChat';
 
-export type UserInGame = {
-  conn: ws.connection;
-  name: string
-}
-export type Player = UserInGame & {
+export type Player = ConnectedUser & {
   side: 'w' | 'b'
-  timeRemain: number,
-  moveTurnStartDate?: Date,
-  endGameTimer?: NodeJS.Timer;
+  timeRemain: number
+  moveTurnStartDate?: Date
+  endGameTimer?: NodeJS.Timer
 }
 export type Spectator = {}
 
@@ -48,7 +43,7 @@ export class Game {
   process: GameProccess;
   chat: GameChat;
   isActive: boolean;
-  endGameByTimeout: (usersInGame: UserInGame[], gameData: GameData) => void;
+  endGameByTimeout: (usersInGame: ConnectedUser[], gameData: GameData) => void;
 
   static isMakeTurnRequestValid(request: MakeTurnBody): boolean {
     if (!request.gameId) return false;
@@ -63,24 +58,31 @@ export class Game {
   }
 
   constructor(
-    user: User,
-    sendGameEndByTimeoutCallback: (usersInGame: UserInGame[], gameData: GameData) => void,
+    user: ConnectedUser,
+    sendGameEndByTimeoutCallback: (usersInGame: ConnectedUser[], gameData: GameData) => void,
     { side, time, timeIncrement }: GameConfig, 
   ) {
     this.id = makeId();
-    const player: Player = { conn: user.conn, name: user.name, side: null, timeRemain: time };
+    const player: Player = { 
+      id: user.id,
+      conn: user.conn,
+      isOnline: true,
+      name: user.name, 
+      side: null,
+      timeRemain: time
+    };
     if (side === 'w' || side === 'b') player.side = side;
     else if (side === 'rand') {
       const sides: ['w', 'b'] = [ 'w', 'b' ];
       player.side = sides[Math.floor(Math.random() * 2)];
     }
     this.side = side;
-    this.players = { [user.userId]: player };
+    this.players = { [user.id]: player };
     this.maxTime = time;
     this.timeIncrement = timeIncrement;
     this.spectators = {};
     this.process = new GameProccess();
-    this.chat = new GameChat(user.userId);
+    this.chat = new GameChat(user.id);
     this.isActive = false;
     this.endGameByTimeout = sendGameEndByTimeoutCallback;
   }
@@ -115,19 +117,21 @@ export class Game {
     }; 
     return payload;
   }
-  public addPlayer(user: User): void {
+  public addPlayer(user: ConnectedUser): void {
     const playerSide: 'w'|'b' = Object.values(this.players)[0].side;
     const newPlayerSide: 'w'|'b' = playerSide === 'w' ? 'b':'w';
-    this.players[user.userId] = {
+    this.players[user.id] = {
+      id: user.id,
+      isOnline: true,
       name: user.name,
       timeRemain: this.maxTime,
       conn: user.conn,
       side: newPlayerSide
     };
-    this.chat.addChatParticipant(user.userId);
+    this.chat.addChatParticipant(user.id);
   }
-  public addSpectator(user: User): void {
-    this.spectators[user.userId] = {
+  public addSpectator(user: ConnectedUser): void {
+    this.spectators[user.id ] = {
       conn: user.conn,
     };
   }
