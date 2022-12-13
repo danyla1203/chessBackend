@@ -375,7 +375,7 @@ export class GameProccess {
 
     const strike: null|StrikedData = this.isStrikeAfterMove(cell);
     if (strike) {
-      possibleShahesForSide.delete(figure);
+      possibleShahesForSide.delete(strike.figure);
     }
 
     board.set(figure, cell);
