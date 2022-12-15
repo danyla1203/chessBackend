@@ -7,8 +7,8 @@ import { dataSource } from './db';
 import { HttpServer } from './lib/HttpServer';
 import { AuthController } from './Auth/AuthController';
 import { UserController } from './User/UserController';
-import { UserService } from './User/UserService';
-import { AuthService } from './Auth/AuthService';
+import { userService, gameService, authService } from './service.modulе';
+import { GameController } from './GameAPI/GameController';
 
 dataSource.initialize()
   .then(() => {
@@ -20,11 +20,10 @@ dataSource.initialize()
   });
 const server = http.createServer();
 
-const userService = new UserService();
-const authService = new AuthService();
 const controllers = [
   new UserController(userService, authService), 
-  new AuthController(authService)
+  new AuthController(authService),
+  new GameController(gameService, authService)
 ];
 const httpServer: HttpServer = new HttpServer(server, controllers);
 

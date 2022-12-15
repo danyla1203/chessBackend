@@ -1,6 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'; 
-
-type Game = { id: string }
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm'; 
+import { GameEntity } from './GameEntity';
 
 @Entity()
 export class UserEntity {
@@ -12,6 +11,7 @@ export class UserEntity {
     email: string;
   @Column()
     password: string;
-  @Column('jsonb', { default: [] })
-    games: Game[];
+  @ManyToMany(() => GameEntity, (game) => game.playersId, { cascade: true })
+  @JoinTable({ name: 'users_games' })
+    games: GameEntity[];
 }

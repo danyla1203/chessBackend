@@ -5,6 +5,8 @@ import { ConnectedUser } from '../WsServer';
 import { FiguresState, GameProccess, MateData, ShahData, StrikedData } from './GameProccess';
 import { GameConfig, MakeTurnBody, TurnData } from './GameHandler';
 import { GameChat, IncomingMessage, MessageData } from './GameChat';
+import { GameService } from '../GameAPI/GameService';
+import { gameService } from '../service.modulе';
 
 export type Player = ConnectedUser & {
   side: 'w' | 'b'
@@ -43,7 +45,9 @@ export class Game {
   process: GameProccess;
   chat: GameChat;
   isActive: boolean;
+  isOver: boolean;
   endGameByTimeout: (usersInGame: ConnectedUser[], gameData: GameData) => void;
+  GameService: GameService;
 
   static isMakeTurnRequestValid(request: MakeTurnBody): boolean {
     if (!request.gameId) return false;
@@ -57,20 +61,30 @@ export class Game {
     }
   }
 
+  private endGame(): void {
+    this.isActive = false;
+    this.isOver = true;
+    for (let player in this.players) clearTimeout(this.players[player].endGameTimer);
+
+    let savingToDb = true;
+    for (let player in this.players) {
+      if (!this.players[player]) savingToDb = false;
+    }
+    if (!savingToDb) return;
+
+    this.GameService.saveGame(this);
+  }
+
   constructor(
     user: ConnectedUser,
     sendGameEndByTimeoutCallback: (usersInGame: ConnectedUser[], gameData: GameData) => void,
     { side, time, timeIncrement }: GameConfig, 
   ) {
     this.id = makeId();
-    const player: Player = { 
-      id: user.id,
-      conn: user.conn,
-      isOnline: true,
-      name: user.name, 
-      side: null,
-      timeRemain: time
-    };
+    const player = Object.assign({
+      timeRemain: time,
+      side: null
+    }, user);
     if (side === 'w' || side === 'b') player.side = side;
     else if (side === 'rand') {
       const sides: ['w', 'b'] = [ 'w', 'b' ];
@@ -84,7 +98,9 @@ export class Game {
     this.process = new GameProccess();
     this.chat = new GameChat(user.id);
     this.isActive = false;
+    this.isOver = false;
     this.endGameByTimeout = sendGameEndByTimeoutCallback;
+    this.GameService = gameService;
   }
   public gameData(): GameData {
     const playersData = [];
@@ -120,21 +136,19 @@ export class Game {
   public addPlayer(user: ConnectedUser): void {
     const playerSide: 'w'|'b' = Object.values(this.players)[0].side;
     const newPlayerSide: 'w'|'b' = playerSide === 'w' ? 'b':'w';
-    this.players[user.id] = {
-      id: user.id,
-      isOnline: true,
-      name: user.name,
-      timeRemain: this.maxTime,
-      conn: user.conn,
-      side: newPlayerSide
-    };
+    this.players[user.id] = Object.assign({
+      side: newPlayerSide,
+      timeRemain: this.maxTime
+    }, user);
     this.chat.addChatParticipant(user.id);
   }
+
   public addSpectator(user: ConnectedUser): void {
     this.spectators[user.id ] = {
       conn: user.conn,
     };
   }
+
   public start(): void {
     this.isActive = true;
     const startPlayer: Player = this.findPlayerBySide('w');
@@ -146,9 +160,10 @@ export class Game {
         if (player.timeRemain > 0) {
           setTimeout(endGameTimeout, player.timeRemain);
         } else {
-          console.log(this.players, Object.values(this.players));
+          console.log('\n');
+          console.log(this.players);
           this.endGameByTimeout(Object.values(this.players), {});
-          this.isActive = false;
+          this.endGame();
         }
       }.bind(this), this.maxTime);
     });
@@ -174,8 +189,12 @@ export class Game {
 
     const shah: null|ShahData = this.process.setShah(figure);
     const mate: null|MateData = this.process.setMate(figure, cell);
+    if (mate) this.endGame();
+
     this.process.setMoveSide();
-    this.players[playerId].timeRemain += this.timeIncrement - (Date.now() - Date.parse(moveTurnStartDate.toString()));
+    
+    const timeChange = this.timeIncrement - (Date.now() - Date.parse(moveTurnStartDate.toString()));
+    this.players[playerId].timeRemain += timeChange;
     
     side === 'w' ?
       this.findPlayerBySide('b').moveTurnStartDate = new Date():

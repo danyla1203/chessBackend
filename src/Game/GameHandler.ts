@@ -108,12 +108,19 @@ export class GameRouter {
     this.sendGameMessage(user.conn, GameResponseTypes.GAME_CREATED, {});
   }
   
-  private connectToGameAsSpectatorHandler(user: ConnectedUser, gameId?: number): void {
+  private connectToGameAsSpectatorHandler(
+    user: ConnectedUser,
+    gameId?: number
+  ): void {
     const game: Game|null = this.GameList.findGameInLobby(gameId);
 
     if (!game) throw new GameNotFound();
     game.addSpectator(user);
-    this.sendGameMessage(user.conn, GameResponseTypes.INIT_GAME, game.initedGameData(user.id));
+    this.sendGameMessage(
+      user.conn,
+      GameResponseTypes.INIT_GAME,
+      game.initedGameData(user.id)
+    );
   }
 
   private connectToGameHandler(user: ConnectedUser, gameId?: number): void {

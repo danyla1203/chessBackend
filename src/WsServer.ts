@@ -25,10 +25,11 @@ export enum ResponseTypes {
 }
 
 export type ConnectedUser = {
-  id: number,
-  name: string,
-  conn: ws.connection,
+  id: number
+  name: string
+  conn: ws.connection
   isOnline: boolean
+  isAuthorized: boolean
 }
 
 export type Request = {
@@ -93,6 +94,7 @@ export class WsServer {
       id: makeId(),
       isOnline: true,
       conn,
+      isAuthorized: false,
     };
   }
   private async setUser(req: ws.request, conn: ws.connection): Promise<ConnectedUser> {
@@ -106,7 +108,8 @@ export class WsServer {
           id: userEntity.id,
           name: userEntity.name,
           isOnline: true,
-          conn
+          conn,
+          isAuthorized: true
         };
       } catch (e) {
         user = this.createUser(conn);
