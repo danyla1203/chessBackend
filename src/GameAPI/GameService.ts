@@ -24,7 +24,20 @@ export class GameService {
   public getGamesByUserId(user: UserWithoutPassword) {
     return this.prisma.user.findUnique({
       select: {
-        games: true
+        games: {
+          select: {
+            id: true,
+            maxTime: true,
+            timeIncrement: true,
+            sideSelecting: true,
+            players: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
       },
       where: { id: user.id }
     });
