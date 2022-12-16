@@ -1,7 +1,5 @@
-import { Repository } from 'typeorm';
-import { dataSource } from '../db';
+import { PrismaClient, User } from '@prisma/client';
 import { BadRequestError } from '../errors/BadRequest';
-import { UserEntity } from '../Entities/UserEntity';
 
 export type UserRegistrationData = {
   name: string
@@ -15,17 +13,13 @@ export type AnonymousUserData = {
 }
 
 export class UserService {
-  User: Repository<UserEntity>;
+  prisma: PrismaClient;
   constructor() {
-    this.User = dataSource.getRepository(UserEntity);
+    this.prisma = new PrismaClient();
   }
-  public async createUser({ name, email, password }: UserRegistrationData): Promise<UserEntity> {
-    const user = await this.User.findOneBy({ email });
+  public async createUser({ name, email, password }: UserRegistrationData): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (user) throw new BadRequestError('User already exist');
-    const newUser = new UserEntity();
-    newUser.name = name;
-    newUser.email = email;
-    newUser.password = password;
-    return this.User.save(newUser);
+    return this.prisma.user.create({ data: { name, email, password } });
   }
 }

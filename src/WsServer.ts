@@ -1,6 +1,5 @@
 import * as ws from 'websocket';
-import { AuthService } from './Auth/AuthService';
-import { UserEntity } from './Entities/UserEntity';
+import { AuthService, UserWithoutPassword } from './Auth/AuthService';
 import { BaseError } from './errors';
 import { ErrorTypes } from './errors/types';
 import { GameData } from './Game/Game';
@@ -103,7 +102,7 @@ export class WsServer {
     if (typeof query === 'object' && query['Authorization']) {
       const accessToken: string = query['Authorization'] as string;
       try {
-        const userEntity: UserEntity = await this.authService.checkAccessToken(accessToken);
+        const userEntity: UserWithoutPassword = await this.authService.checkAccessToken(accessToken);
         user = {
           id: userEntity.id,
           name: userEntity.name,

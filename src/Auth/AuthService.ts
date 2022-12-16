@@ -1,9 +1,6 @@
 import * as jwt from 'jsonwebtoken';
-import { Repository } from 'typeorm';
+import { PrismaClient, Game } from '@prisma/client';
 
-import { dataSource } from '../db';
-import { UserEntity } from '../Entities/UserEntity';
-import { AuthEntity } from '../Entities/AuthEntity';
 import { BadRequestError } from '../errors/BadRequest';
 import { NotFound } from '../errors/NotFound';
 import { AnonymousUserData } from '../User/UserService';
@@ -25,13 +22,19 @@ type LoginData = {
   deviceId: string
 }
 
+export type UserWithoutPassword = {
+  id: number
+  name: string
+  email: string,
+  games: Game[]
+}
+
 export class AuthService {
-  Auth: Repository<AuthEntity>;
-  User: Repository<UserEntity>;
+  prisma: PrismaClient;
   constructor() {
-    this.Auth = dataSource.getRepository(AuthEntity);
-    this.User = dataSource.getRepository(UserEntity);
+    this.prisma = new PrismaClient();
   }
+
   private decodeToken(token: string, secret: string): TokenPayload {
     try {
       return jwt.verify(token, secret) as TokenPayload;
@@ -41,12 +44,9 @@ export class AuthService {
   }
 
   public async createAuth(userId: number, deviceId: string): Promise<Auth> {
-    const auth = new AuthEntity();
-    auth.user = userId;
-    auth.deviceId = deviceId;
-
     const tokenPayload = { deviceId, id: userId };
-    auth.refreshToken = jwt.sign(
+
+    const refreshToken = jwt.sign(
       tokenPayload, 
       process.env.JWT_REFRESH_SECRET, 
       { expiresIn: process.env.JWT_REFRESH_EXPIRES }
@@ -56,67 +56,73 @@ export class AuthService {
       process.env.JWT_ACCESS_SECRET, 
       { expiresIn: process.env.JWT_ACCESS_EXPIRES }
     );
-
-    await this.Auth.save(auth);
+    await this.prisma.auth.create({
+      data: {
+        refreshToken,
+        userId,
+        deviceId
+      }
+    });
 
     return { access: accessToken, 
-      refresh: auth.refreshToken, 
+      refresh: refreshToken, 
       expiresIn: process.env.JWT_ACCESS_EXPIRES 
     };
   }
 
-  public async checkAccessToken(token?: string): Promise<UserEntity> {
+  public async checkAccessToken(token?: string): Promise<UserWithoutPassword> {
     if (!token) throw new BadRequestError('Provide token');
     const { id, deviceId } = this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
 
-    const user = await this.User.findOneBy({ id });
+    const user = await this.prisma.user.findUnique({ 
+      where: { id },
+      select: { id: true, name: true, email: true, games: true }
+    });
+    
     if (!user) throw new BadRequestError('Invalid access token');
 
-    const auth = await this.Auth.findOneBy({ user: user.id, deviceId });
+    const auth = await this.prisma.auth.findFirst({ where: { userId: user.id, deviceId } });
     if (!auth) throw new BadRequestError('Session expired');
     if (auth.expiresIn < new Date()) {
-      await this.Auth.delete(auth);
+      await this.prisma.auth.delete({ where: auth });
       throw new BadRequestError('Session expired');
     }
     return user;
   }
 
   public async login({ password, email, deviceId }: LoginData): Promise<Auth> {
-    const user = await this.User.findOneBy({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFound('User not found');
     if (user.password !== password) throw new BadRequestError('Incorrect password');
-    await this.Auth.delete({ deviceId });
+    await this.prisma.auth.deleteMany({ where: { deviceId } });
     return this.createAuth(user.id, deviceId);
   }
   
   public async logout(token?: string): Promise<AnonymousUserData> {
     const { id, deviceId } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
-    await this.Auth.delete({ user: id, deviceId });
+    await this.prisma.auth.deleteMany({ where: { deviceId, userId: id } });
     return { id: makeId(), name: 'Anonymous' };
   }
   public async logoutAll(token?: string): Promise<{ isDeleted: boolean }> {
     const { id } = await this.decodeToken(token, process.env.JWT_ACCESS_SECRET);
-    await this.Auth.delete({ user: id });
+    await this.prisma.auth.deleteMany({ where: { userId: id } });
     return { isDeleted: true };
   }
 
   public async getNewTokenPair(refreshToken: string): Promise<Auth> {
     const { id } = this.decodeToken(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-    const auth = await this.Auth.findOne({
-      relations: {
-        user: true,
-      },
+    const auth = await this.prisma.auth.findFirst({
       where: {
         refreshToken
       }
     });
     if (!auth) throw new BadRequestError('Session expired');
     if (auth.expiresIn < new Date()) {
-      await this.Auth.delete(auth);
+      await this.prisma.auth.delete({ where: { id: auth.id } });
       throw new BadRequestError('Session expired');
     }
-    await this.Auth.delete(auth.id);
+    await this.prisma.auth.delete({ where: { id: auth.id } });
     return this.createAuth(id, auth.deviceId);
   }
 }

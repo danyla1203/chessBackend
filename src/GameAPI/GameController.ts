@@ -13,7 +13,7 @@ export class GameController {
 
   @get('/user/games')
   public async getUserGames(req: Request) {
-    const { id } = await this.authService.checkAccessToken(req.token);
-    return this.gameService.getGamesByUserId(id);
+    const user = await this.authService.checkAccessToken(req.token);
+    return this.gameService.getGamesByUserId(user);
   }
 }

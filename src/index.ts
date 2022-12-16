@@ -3,21 +3,12 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import * as http from 'http';
 import { WsServer } from './WsServer';
-import { dataSource } from './db';
 import { HttpServer } from './lib/HttpServer';
 import { AuthController } from './Auth/AuthController';
 import { UserController } from './User/UserController';
 import { userService, gameService, authService } from './service.modulе';
 import { GameController } from './GameAPI/GameController';
 
-dataSource.initialize()
-  .then(() => {
-    console.log('Data Source has been initialized!');
-    dataSource.synchronize();
-  })
-  .catch((err) => {
-    console.error('Error during Data Source initialization:', err);
-  });
 const server = http.createServer();
 
 const controllers = [
