@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import { PrismaClient, Game } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import { BadRequestError } from '../errors/BadRequest';
 import { NotFound } from '../errors/NotFound';
@@ -26,7 +26,6 @@ export type UserWithoutPassword = {
   id: number
   name: string
   email: string,
-  games: Game[]
 }
 
 export class AuthService {
@@ -76,7 +75,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({ 
       where: { id },
-      select: { id: true, name: true, email: true, games: true }
+      select: { id: true, name: true, email: true }
     });
     
     if (!user) throw new BadRequestError('Invalid access token');

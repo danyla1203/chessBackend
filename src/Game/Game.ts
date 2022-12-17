@@ -46,6 +46,7 @@ export class Game {
   chat: GameChat;
   isActive: boolean;
   isOver: boolean;
+  winner: number;
   endGameByTimeout: (usersInGame: ConnectedUser[], gameData: GameData) => void;
   GameService: GameService;
 
@@ -61,9 +62,10 @@ export class Game {
     }
   }
 
-  private endGame(): void {
+  private endGame(winner: number): void {
     this.isActive = false;
     this.isOver = true;
+    this.winner = winner;
     for (let player in this.players) clearTimeout(this.players[player].endGameTimer);
 
     let savingToDb = true;
@@ -163,7 +165,8 @@ export class Game {
           console.log('\n');
           console.log(this.players);
           this.endGameByTimeout(Object.values(this.players), {});
-          this.endGame();
+          const winner = Object.values(this.players).find((pl: Player) => pl.id !== player.id );
+          this.endGame(winner);
         }
       }.bind(this), this.maxTime);
     });
@@ -189,7 +192,7 @@ export class Game {
 
     const shah: null|ShahData = this.process.setShah(figure);
     const mate: null|MateData = this.process.setMate(figure, cell);
-    if (mate) this.endGame();
+    if (mate) this.endGame(playerId);
 
     this.process.setMoveSide();
     

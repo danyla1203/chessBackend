@@ -21,14 +21,24 @@ model Game {
   maxTime       Int
   timeIncrement Int
   sideSelecting String @db.VarChar
-  players       User[]
+  players       UserInGame[]
 }
 
+model UserInGame {
+  side          String
+  isWinner      Boolean
+  userId        Int
+  user          User   @relation(fields: [userId], references: [id])
+  gameId        Int
+  game          Game @relation(fields: [gameId], references: [id])
+
+  @@id([userId, gameId])
+}
 model User {
   id       Int    @id @default(autoincrement())
   name     String @db.VarChar
   email    String @unique() @db.VarChar
   password String @db.VarChar
-  games    Game[]
   auth     Auth[]
+  players  UserInGame[]
 }

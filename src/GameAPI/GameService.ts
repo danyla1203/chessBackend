@@ -10,36 +10,55 @@ export class GameService {
 
   public async saveGame(game: Game): Promise<void> {
     const ids = Object.values(game.players).map((player: Player) => player.id);
+    const player1 = game.players[ids[0]];
+    const player2 = game.players[ids[1]];
     await this.prisma.game.create({
       data: {
         maxTime: game.maxTime,
         timeIncrement: game.timeIncrement,
         sideSelecting: game.side,
         players: {
-          connect: [ { id: ids[0] }, { id: ids[1] } ]
-        } 
+          create: [
+            {
+              side: player1.side,
+              isWinner: game.winner === player1.id,
+              user: { connect: { id: player1.id } }
+            },
+            {
+              side: player2.side,
+              isWinner: game.winner === player2.id,
+              user: { connect: { id: player2.id  } }
+            }
+          ]
+        }
       }
     });
   }
-  public getGamesByUserId(user: UserWithoutPassword) {
-    return this.prisma.user.findUnique({
+  public async getGamesByUserId(user: UserWithoutPassword) {
+    const games = await this.prisma.game.findMany({
       select: {
-        games: {
+        id: true,
+        maxTime: true,
+        timeIncrement: true,
+        sideSelecting: true,
+        players: {
           select: {
-            id: true,
-            maxTime: true,
-            timeIncrement: true,
-            sideSelecting: true,
-            players: {
-              select: {
-                id: true,
-                name: true
-              }
+            side: true,
+            isWinner: true,
+            user: {
+              select: { id: true, name: true },
             }
           }
         }
       },
-      where: { id: user.id }
+      where: {
+        players: {
+          some: {
+            userId: user.id
+          }
+        }
+      }
     });
+    return { items: games };
   }
 }
