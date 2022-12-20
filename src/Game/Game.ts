@@ -162,8 +162,7 @@ export class Game {
         if (player.timeRemain > 0) {
           setTimeout(endGameTimeout, player.timeRemain);
         } else {
-          console.log('\n');
-          console.log(this.players);
+          if (!this.players) return;
           this.endGameByTimeout(Object.values(this.players), {});
           const winner = Object.values(this.players).find((pl: Player) => pl.id !== player.id );
           this.endGame(winner);
