@@ -23,6 +23,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon ./output/index.js",
-    "ts": "tsc --watch"
+    "ts": "tsc --watch",
+    "build": "tsc"
   }
 }
