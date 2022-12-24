@@ -21,5 +21,6 @@ cache:
     - 'node_modules/**/*'
 artifacts:
   files:
+    - package.json
     - '**/*'
   name: chess-backend-$(date +%Y-%m-%d)
