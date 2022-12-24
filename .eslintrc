@@ -1,0 +1,43 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "indent": [
+      "error",
+      2
+    ],
+    "array-bracket-newline": ["error", "consistent"],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error"
+    ],
+    "keyword-spacing": [
+      "error",
+      {
+        "before": true
+      }
+    ],
+    "space-before-blocks": [
+      "error",
+      "always"
+    ],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": [
+      "error",
+      "always"
+    ],
+    "array-element-newline": [
+      "error",
+      "consistent"
+    ]
+  }
+}

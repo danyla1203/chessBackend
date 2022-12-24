@@ -1,16 +1,29 @@
 {
   "dependencies": {
-    "websocket": "1.0.34",
-    "typescript": "4.5.2",
+    "@prisma/client": "^4.7.1",
+    "@types/busboy": "^1.5.0",
+    "@types/node": "16.11.9",
     "@types/websocket": "1.0.4",
-    "@types/node": "16.11.9"
+    "prisma": "^4.7.1",
+    "busboy": "^1.6.0",
+    "dotenv": "^16.0.3",
+    "joi": "^17.7.0",
+    "jsonwebtoken": "^8.5.1",
+    "reflect-metadata": "^0.1.13",
+    "typescript": "4.5.2",
+    "websocket": "1.0.34"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.9",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint": "8.26.0",
     "nodemon": "2.0.15"
   },
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon ./dist/index.js",
-    "ts": "tsc --watch"
+    "dev": "nodemon ./output/index.js",
+    "ts": "tsc --watch",
+    "build": "tsc"
   }
 }

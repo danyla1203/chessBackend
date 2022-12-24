@@ -1,128 +1,157 @@
 import * as ws from 'websocket';
-import { randomBytes } from 'crypto';
-import { CompletedMove, Game, Player, TurnData } from './Game/Game';
+import { AuthService, UserWithoutPassword } from './Auth/AuthService';
+import { BaseError } from './errors';
+import { ErrorTypes } from './errors/types';
+import { GameData } from './Game/Game';
+import { GameRequest, GameRouter } from './Game/GameHandler';
+import { GameList } from './Game/GameList';
+import { makeId } from './tools/createUniqueId';
 
-enum ResponseTypes {
-  INIT_GAME = 'INIT_GAME',
-  UPDATE_STATE = 'UPDATE_STATE',
-  STRIKE = 'STRIKE',
-  SHAH = 'SHAH',
-  MATE = 'MATE'
-}
-enum ErrorTypes {
-  BAD_REQUEST = 'BAD_REQUEST',
-}
 type Response = {
-  type: ResponseTypes|ErrorTypes;
+  type: any,
   payload: any;
 }
+
+export enum RequestTypes {
+  Game = 'Game',
+  GameChat = 'GameChat'
+}
+export enum ResponseTypes {
+  Game = 'Game',
+  GameChat = 'GameChat',
+  GameList = 'GameList',
+  User = 'User',
+}
+
+export type ConnectedUser = {
+  id: number
+  name: string
+  conn: ws.connection
+  isOnline: boolean
+  isAuthorized: boolean
+}
+
+export type Request = {
+  type?: RequestTypes,
+  body?: any
+}
+
 export class WsServer {
   ws: ws.server;
-  games: Game[];
-  constructor(ws: ws.server) {
+  users: ConnectedUser[];
+  GameRouter: GameRouter;
+  GameList: GameList;
+  authService: AuthService;
+
+  constructor(ws: ws.server, authService: AuthService) {
     this.ws = ws;
-    this.games = [];
-  }
-
-  //Use in dev mode to mock ip address
-  private makeId(): string {
-    return randomBytes(10).toString('hex');
-  }
-
-  private connectToGame(path: string, newConn: ws.connection, playerId: string): Game | undefined {
-    if (Game.isNewGame(path, this.games)) {
-      const game = new Game(path, newConn, playerId);
-      this.games.push(game);
-      return game;
-    } else {
-      const game = Game.findGame(path, playerId, this.games);
-      if (game) {
-        game.addPlayer(newConn, playerId);
-        game.start();
+    this.users = [];
+    this.GameList = new GameList((games: GameData[]) => {
+      for (const user of this.users) {
+        this.sendMessage(user.conn, ResponseTypes.GameList, games);
       }
-      return game;
-    }
+    }, this.sendMessage);
+    this.GameRouter = new GameRouter(this.GameList, this.sendMessage);
+    this.authService = authService;
   }
 
-  private sendErrorMessage(conn: ws.connection, errType: ErrorTypes, errMessage: string) {
-    this.sendMessage(conn, errType, {errMessage: errMessage});
-  }
-
-  private sendMessage(conn: ws.connection, type: ResponseTypes|ErrorTypes, payload: any) {
-    const data: Response = {
-      type: type,
-      payload: payload
-    }
+  private sendMessage(
+    conn: ws.connection, 
+    type: string, 
+    payload: any
+  ): void {
+    const data: Response = { type, payload };
     conn.sendUTF(JSON.stringify(data));
   }
 
-  private parseRequest(message: ws.Message): any {
+  private isMessageStructValid(parsedMessage: any): boolean {
+    if (typeof parsedMessage !== 'object') return false;
+    if (!parsedMessage.type) return false;
+    if (!parsedMessage.body) return false;
+    return true;
+  }
+  private parseMessage(message: ws.Message): Request|null {
     if (message.type == 'utf8' ) {
       try {
-        return JSON.parse(message.utf8Data).payload;
+        return JSON.parse(message.utf8Data);
       } catch (e: any) {
         return null;
       }
     }
   }
+  
+  private handleMessage(user: ConnectedUser, message: Request): void {
+    switch (message.type) {
+    case RequestTypes.Game:
+      this.GameRouter.handleMessage(user, message as GameRequest);
+      break;
+    }
+  }
+  private createUser(conn: ws.connection): ConnectedUser {
+    return {
+      name: 'Anonymous',
+      id: makeId(),
+      isOnline: true,
+      conn,
+      isAuthorized: false,
+    };
+  }
+  private async setUser(req: ws.request, conn: ws.connection): Promise<ConnectedUser> {
+    let user: ConnectedUser;
+    const query = req.resourceURL.query;
+    if (typeof query === 'object' && query['Authorization']) {
+      const accessToken: string = query['Authorization'] as string;
+      try {
+        const userEntity: UserWithoutPassword = await this.authService.checkAccessToken(accessToken);
+        user = {
+          id: userEntity.id,
+          name: userEntity.name,
+          isOnline: true,
+          conn,
+          isAuthorized: true
+        };
+      } catch (e) {
+        user = this.createUser(conn);
+      }
+    } else {
+      user = this.createUser(conn);
+    }
+    return user;
+  }
 
-  public run() {
-    this.ws.on('request', (req: ws.request) => {
-      const newConn: ws.connection = req.accept('echo-protocol', req.origin);
-      const PATH: string = req.resourceURL.path.split('/')[1];
-      const PlayerId = this.makeId();
+  public run(): void {
+    this.ws.on('request', async (req: ws.request) => {
+      let newConn: ws.connection;
+      try {
+        newConn = req.accept('echo-protocol', req.origin);
+      } catch (e) {
+        return;
+      }
 
-      const game: Game | undefined = this.connectToGame(PATH, newConn, PlayerId);
-      if (game) {
-        let state = game.actualState();
-        let boards = {
-          white: Object.fromEntries(state.white),
-          black: Object.fromEntries(state.black)
+      const user: ConnectedUser = await this.setUser(req, newConn);
+      this.users.push(user);
+
+      this.sendMessage(newConn, ResponseTypes.User, { id: user.id, name: user.name });
+      this.GameList.sendLobbyToConnectedUser(user);
+      newConn.on('message', (message: ws.Message) => {
+        const parsedMessage: Request|null = this.parseMessage(message);
+        if (!parsedMessage || !this.isMessageStructValid(parsedMessage)) {
+          this.sendMessage(newConn, ErrorTypes.BAD_REQUEST, 'Message is invalid');
         }
-        const payload: any = {board: boards, side: null} 
-        if (game.couple.length == 1) {
-          payload.side = 'w';
-          this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
-        } else if (game.couple.length == 2) {
-          payload.side = 'b';
-          this.sendMessage(newConn, ResponseTypes.INIT_GAME, payload);
-        }
-
-        newConn.on('message', (message: ws.Message) => {
-          if (game.isActive) {
-            let req = this.parseRequest(message);
-            if (!req) {
-              this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Incorrect data');
-              return;
-            }
-            req.playerId = PlayerId;
-            const result: null|CompletedMove = game.makeTurn(req);
-            if (!result) {
-              this.sendErrorMessage(newConn, ErrorTypes.BAD_REQUEST, 'Bad request');
-              return
-            }
-            game.couple.map((player: Player) => {
-              if (result) {
-                let actState = game.actualState();
-                let boards = {
-                  white: Object.fromEntries(actState.white),
-                  black: Object.fromEntries(actState.black)
-                }
-                this.sendMessage(player.conn, ResponseTypes.UPDATE_STATE, boards);
-                if (result.strikedData) {
-                  this.sendMessage(player.conn, ResponseTypes.STRIKE, result.strikedData);
-                }
-                if (result.shah) {
-                  this.sendMessage(player.conn, ResponseTypes.SHAH, result.shah);
-                }
-                if (result.mate) {
-                  this.sendMessage(player.conn, ResponseTypes.MATE, result.mate);
-                }
-              }
-            });
+        try {
+          this.handleMessage(user, parsedMessage);
+        } catch (e: unknown) {
+          if (e instanceof BaseError) {
+            this.sendMessage(newConn, e.type, { error: e.message, code: e.statusCode });
+          } else {
+            this.sendMessage(newConn, 'SERVER_ERR', {});
           }
-        });
-      } 
+        }
+      });
+      newConn.on('close', () => {
+        this.GameList.removeCreatedGameByUser(user.id);
+
+      });
     });
   }
 }

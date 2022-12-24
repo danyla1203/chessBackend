@@ -1,11 +1,11 @@
-import { Figures, ShahData, PossibleShahes, Figure, Cell, StrikeAround } from "./GameProccess";
+import { Figures, ShahData, PossibleShahes, Figure, Cell, StrikeAround } from './GameProccess';
 
 export class GameState {
   private blackBoard: Figures;
   private whiteBoard: Figures;
   private shahData: null|ShahData;
   private possibleShahes: PossibleShahes;
-  private strikeAroundKn: StrikeAround
+  private strikeAroundKn: StrikeAround;
 
   private sideToTurn: 'w'|'b';
 
@@ -20,7 +20,7 @@ export class GameState {
   public updateBoard(figure: Figure, cell: Cell): void {
     this.sideToTurn == 'w' ?
       this.whiteBoard.set(figure, cell):
-      this.blackBoard.set(figure, cell)
+      this.blackBoard.set(figure, cell);
   }
   
   public removeShah(): void {
@@ -34,7 +34,7 @@ export class GameState {
     return new Map(this.whiteBoard);
   }
   get state() {
-    return {'w': this.getWhite(), 'b': this.getBlack()}
+    return { 'w': this.getWhite(), 'b': this.getBlack() };
   }
   get side() {
     return this.sideToTurn;
@@ -49,10 +49,16 @@ export class GameState {
     this.shahData = { 
       shachedSide: toSide,
       byFigure: byFigure
-    }
+    };
+  }
+  public removePossibleShah(forSide: 'w'|'b', figure: Figure): void {
+    this.possibleShahes[forSide].delete(figure);
   }
   public getPossibleShahes(): PossibleShahes {
-    return this.possibleShahes;
+    return { 
+      b: new Set(this.possibleShahes.b),
+      w: new Set(this.possibleShahes.w)
+    };
   }
   public getStrikeAroundKn(): StrikeAround {
     return this.strikeAroundKn;
