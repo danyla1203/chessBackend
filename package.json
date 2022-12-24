@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "nodemon ./output/index.js",
     "ts": "tsc --watch",
+    "start": "node ./output/index.js",
     "build": "tsc"
   }
 }
