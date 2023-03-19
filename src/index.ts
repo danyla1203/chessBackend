@@ -17,6 +17,7 @@ const controllers = [
   new GameController(gameService, authService)
 ];
 const httpServer: HttpServer = new HttpServer(server, controllers);
+httpServer.setApiPrefix('api');
 
 server.listen(process.env.PORT, () => {
   console.log((new Date()) + ` Server is listening on port ${process.env.PORT}`);

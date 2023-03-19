@@ -13,9 +13,15 @@ export class HttpServer {
   ExtendContext: ExtendContext = new ExtendContext();
   server: http.Server;
 
+  apiPrefix: string;
+
   constructor(server: http.Server, controllers: any[]) {
     this.controllers = controllers;
     this.server = server;
+  }
+
+  public setApiPrefix(prefix: string): void {
+    this.apiPrefix = prefix.replace('/', '');
   }
 
   private getAllHandlersFromControllers(): handler[] {
@@ -36,12 +42,13 @@ export class HttpServer {
     method: string,
     handlers: handler[]
   ): handler | undefined {
-    const splitedUrl = url.substring(1).split('/');
+    const splitedUrl: string[] = url.substring(1).split('/');
     for (const handler of handlers) {
       if (method !== handler.method) {
         continue;
       }
-      const splitedHandlerPath = handler.path.substring(1).split('/');
+      const splitedHandlerPath: string[] = handler.path.substring(1).split('/');
+      splitedHandlerPath.unshift(this.apiPrefix);
       //if pattern and url have different lengths
       if (splitedHandlerPath.length !== splitedUrl.length) {
         continue;
