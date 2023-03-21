@@ -16,6 +16,13 @@ model Auth {
   user         User     @relation(fields: [userId], references: [id])
 }
 
+model Confirmations {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique()
+  code         String
+  isConfirmed  Boolean  @default(false)
+}
+
 model Game {
   id            Int    @id @default(autoincrement())
   maxTime       Int

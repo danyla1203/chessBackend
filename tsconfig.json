@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["ES2021", "DOM"],
     "outDir": "./output/",
     "noImplicitAny": true,
     "module": "commonjs",

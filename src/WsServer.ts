@@ -150,7 +150,6 @@ export class WsServer {
       });
       newConn.on('close', () => {
         this.GameList.removeCreatedGameByUser(user.id);
-
       });
     });
   }

@@ -7,5 +7,18 @@ export const loginSchema = Joi.object({
 });
 
 export const refreshTokenSchema = Joi.object({
-  refreshToken: Joi.string().min(2),
+  refreshToken: Joi.string().min(2).required(),
+});
+
+export const verifyEmailSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
+export const verifyEmailCodeSchema = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().min(2).required(),
+});
+
+export const googleOauthSchema = Joi.object({
+  code: Joi.string().min(5).required()
 });
