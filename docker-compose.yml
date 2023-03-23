@@ -1,0 +1,17 @@
+# docker-compose.yml
+version: '2'
+services:
+  web:
+    depends_on:
+      - database
+    build: .
+    ports:
+      - '9200:9200'
+    environment:
+      DATABASE_URL: postgresql://postgres:root@database:5432/chess?schema=public
+  database:
+    image: "postgres"
+    environment:
+      POSTGRES_DB: chess
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
