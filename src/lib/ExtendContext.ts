@@ -40,13 +40,18 @@ export class ExtendContext {
   private parseCookie(req: Request): void {
     const cookieString = req.headers['cookie'];
     const parsedCookies = new Map();
-    if (cookieString) {
-      const splitedCookieString = cookieString.split(';');
-      for (let i = 0; i < splitedCookieString.length; i++) {
-        const [ cookieName, value ] = splitedCookieString[i].split('=');
-        parsedCookies.set(`${cookieName}`.trim(), value);
-      }
+
+    if (!cookieString) {
+      req.cookies = parsedCookies;
+      return;
     }
+
+    const cookiePairs = cookieString.split(';');
+    for (const pair of cookiePairs) {
+      const [ name, value ] = pair.split('=');
+      parsedCookies.set(name.trim(), value);
+    }
+
     req.cookies = parsedCookies;
   }
 

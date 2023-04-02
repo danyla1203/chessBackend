@@ -40,7 +40,7 @@ export class HttpServer {
   private getHandler(
     url: string,
     method: string,
-    handlers: handler[]
+    handlers: handler[],
   ): handler | undefined {
     const splitedUrl: string[] = url.substring(1).split('/');
     for (const handler of handlers) {
@@ -63,54 +63,57 @@ export class HttpServer {
     }
   }
 
-  private async executeHandler(
-    req: Request, 
-    res: Response,
-    handler: handler
-  ) {
+  private async executeHandler(req: Request, res: Response, handler: handler) {
     try {
       const result: any = await handler.handlerFunc(req, res);
       res.end(JSON.stringify(result));
-    } catch (e: unknown) {
+    } catch (e: any) {
       if (e instanceof BaseError) {
         res.statusCode = parseInt(e.statusCode);
         res.end(JSON.stringify({ error: e.message }));
       } else {
         res.statusCode = 500;
         console.log(e);
-        res.end('Server error');
+        res.end(`Server error: ${e.message}`);
       }
     }
   }
 
-  private disableCors(res: Response): void {
+  private cors(res: Response): void {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With' );
-    res.setHeader('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Requested-With',
+    );
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'PUT, POST, GET, DELETE, OPTIONS',
+    );
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
   public run(): void {
     const handlers: handler[] = this.getAllHandlersFromControllers();
+
     this.server.on('request', async (req: Request, res: Response) => {
-      this.disableCors(res);
+      this.cors(res);
+
       if (req.method === 'OPTIONS') {
         res.statusCode = 200;
         res.end();
         return;
       }
-      res.setHeader(
-        'Content-Type',
-        'application/json'
-      );
-      const handler: handler|undefined = this.getHandler(req.url, req.method, handlers);
-      if (!handler) {
+
+      res.setHeader('Content-Type', 'application/json');
+
+      const handler = this.getHandler(req.url, req.method, handlers);
+      if (handler) {
+        await this.ExtendContext.extend(req, res, handler.path);
+        await this.executeHandler(req, res, handler);
+      } else {
         res.statusCode = 404;
         res.end(JSON.stringify({ error: 'Not found' }));
-        return;
       }
-      await this.ExtendContext.extend(req, res, handler.path);
-      await this.executeHandler(req, res, handler);
     });
   }
 }
