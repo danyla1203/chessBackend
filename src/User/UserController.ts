@@ -1,4 +1,8 @@
-import { Auth, AuthService, UserWithoutPassword } from '../Auth/AuthService';
+import {
+  Auth,
+  AuthService,
+  UserWithoutPassword 
+} from '../Auth/AuthService';
 import { post, get } from '../lib/httpMethodDecorators';
 import { UserService } from './UserService';
 import { Request } from '../lib/ExtendContext';

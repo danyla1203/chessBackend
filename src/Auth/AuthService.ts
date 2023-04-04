@@ -157,7 +157,6 @@ export class AuthService {
     //   code: '',
     //   isConfirmed: true
     // } });
-
     return { name: user.name, email: user.email };
   }
 

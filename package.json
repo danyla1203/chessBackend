@@ -6,6 +6,8 @@
     "@types/node": "16.11.9",
     "@types/websocket": "1.0.4",
     "busboy": "^1.6.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
     "dotenv": "^16.0.3",
     "joi": "^17.7.0",
     "jsonwebtoken": "^8.5.1",
@@ -23,9 +25,9 @@
   },
   "type": "commonjs",
   "scripts": {
-    "dev": "nodemon ./output/index.js",
-    "ts": "tsc --watch",
-    "start": "node ./output/index.js",
-    "build": "tsc"
+    "start": "node ./output/src/index.js",
+    "start:watch": "nodemon ./output/src/index.js",
+    "compile": "tsc",
+    "compile:watch": "tsc --watch"
   }
 }

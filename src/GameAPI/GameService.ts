@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { UserWithoutPassword } from '../Auth/AuthService';
-import { Game, Player } from '../Game/Game';
+import { Player, Game } from '../Game/game';
 
 export class GameService {
   prisma: PrismaClient;
@@ -45,19 +45,11 @@ export class GameService {
           select: {
             side: true,
             isWinner: true,
-            user: {
-              select: { id: true, name: true },
-            }
+            user: { select: { id: true, name: true }, }
           }
         }
       },
-      where: {
-        players: {
-          some: {
-            userId: user.id
-          }
-        }
-      }
+      where: { players: { some: { userId: user.id } } }
     });
     return { items: games };
   }

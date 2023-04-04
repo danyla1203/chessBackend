@@ -18,12 +18,20 @@ export class UserService {
   constructor() {
     this.prisma = new PrismaClient();
   }
-  public async createUser({ name, email, password }: UserRegistrationData): Promise<User> {
+  public async createUser({
+    name,
+    email,
+    password 
+  }: UserRegistrationData): Promise<User> {
     const confirmation = await this.prisma.confirmations.findUnique({ where: { email } });
     if (!confirmation) throw new NotFound('Confirmation not found');
 
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (user) throw new BadRequestError('User already exist');
-    return this.prisma.user.create({ data: { name, email, password } });
+    return this.prisma.user.create({
+      data: {
+        name, email, password 
+      } 
+    });
   }
 }

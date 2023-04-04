@@ -1,41 +1,16 @@
-import { GameState } from './GameState';
+import { GameState } from '../../state/GameState';
+import { 
+  FiguresState, 
+  Cell, 
+  Boards, 
+  CellUpdate, 
+  Figure,
+  Figures, 
+  StrikedData, 
+  MateData, 
+  ShahData 
+} from './types';
 
-export type Cell = string;
-export type Figure = string;
-export type FiguresState = {
-  black: Map<Figure, Cell>
-  white: Map<Figure, Cell>
-}
-export type StrikedData = {
-  strikedSide: 'w'|'b';
-  figure: Figure;
-}
-export type ShahData = {
-  shachedSide: 'w'|'b';
-  byFigure: Figure;
-}
-export type MateData = {
-  matedSide: 'w'|'b',
-  byFigure: Figure
-}
-export type PossibleShahes = {
-  'w': Set<Figure>;
-  'b': Set<Figure>;
-}
-export type StrikeAround = {
-  'w': Set<Figure>;
-  'b': Set<Figure>;
-};
-export type Figures = Map<Figure, Cell>
-
-export type Boards = {
-  board: Figures;
-  opponent: Figures;
-}
-type CellUpdate = {
-  prevCell: Cell;
-  newCell: Cell;
-}
 export class GameProccess {
   private Letters: string[];
   private store: GameState;
@@ -234,7 +209,7 @@ export class GameProccess {
       }
     }
   }
-  private canKnightMove(boards: Boards, cells: CellUpdate): boolean {
+  private canKnightMove(cells: CellUpdate): boolean {
     const [ prevLetter, prevNum ] = cells.prevCell;
     const num = parseInt(prevNum, 10);
     const nextLetters = this.findNextLetter(prevLetter);
@@ -350,7 +325,7 @@ export class GameProccess {
       return true;
     } else if (/Q/.test(figure) && this.canQueenMove(boards, cells)) {
       return true;
-    } else if (/K/.test(figure) && this.canKnightMove(boards, cells)) {
+    } else if (/K/.test(figure) && this.canKnightMove(cells)) {
       return true;
     }
   }
@@ -600,7 +575,6 @@ export class GameProccess {
   private queenMove(knCell: Cell, currentCell: Cell): Cell[] {
     return [ ...this.rockMove(knCell, currentCell), ...this.bishopMove(knCell, currentCell) ];
   }
-  
   
   public getEmptyCellsBetweenKnAndShahedFigure(knCell: Cell, figure: Figure, figureCell: Cell): Cell[] {
     if (/R/.test(figure)) return this.rockMove(knCell,figureCell);

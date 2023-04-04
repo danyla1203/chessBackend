@@ -1,4 +1,11 @@
-import { Figures, ShahData, PossibleShahes, Figure, Cell, StrikeAround } from './GameProccess';
+import { 
+  Figures,
+  ShahData, 
+  PossibleShahes, 
+  Figure, 
+  Cell, 
+  StrikeAround 
+} from '../game/process/types';
 
 export class GameState {
   private blackBoard: Figures;

@@ -4,12 +4,12 @@
     "outDir": "./output/",
     "noImplicitAny": true,
     "module": "commonjs",
-    "target": "es2017",
+    "target": "es2021",
     "allowJs": true,
     "sourceMap": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "types": ["reflect-metadata"]
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

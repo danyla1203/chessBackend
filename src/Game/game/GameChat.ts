@@ -1,18 +1,7 @@
-export type IncomingMessage = {
-  text?: string
-}
-
-export type Message = {
-  text: string
-  date: Date
-}
-export type MessageData = {
-  text: string
-  date: Date
-}
+import { GameChatMessage, GameChatIncomingMessage } from '.';
 
 export class GameChat {
-  messages: { [k: number]: Message[] };
+  messages: { [k: number]: GameChatMessage[] };
 
   constructor(playerId: number) {
     this.messages = { [playerId]: [] };
@@ -20,23 +9,23 @@ export class GameChat {
   addChatParticipant(playerId: number) {
     this.messages[playerId] = [];
   }
-  
+
   public addMessage(
     playerId: number,
-    message: IncomingMessage
-  ): null|MessageData {
+    message: GameChatIncomingMessage,
+  ): null | GameChatMessage {
     if (!message.text) return null;
     if (!this.messages[playerId]) return null;
 
-    const messageData = { 
+    const messageData = {
       text: message.text,
-      date: new Date() 
+      date: new Date(),
     };
     this.messages[playerId].push(messageData);
     return messageData;
   }
-  public getAllMessages(): MessageData[]  {
-    const msgArr: MessageData[] = [];
+  public getAllMessages(): GameChatMessage[] {
+    const msgArr: GameChatMessage[] = [];
     for (const playerId in this.messages) {
       for (const message of this.messages[playerId]) msgArr.push(message);
     }

@@ -6,9 +6,11 @@
   "rules": {
     "indent": [
       "error",
-      2
+      2,
+      { "ignoredNodes": ["PropertyDefinition"] }
     ],
     "array-bracket-newline": ["error", "consistent"],
+    "object-curly-newline": ["error", { "minProperties": 3, "multiline": true }],
     "semi": [
       "error",
       "always"
